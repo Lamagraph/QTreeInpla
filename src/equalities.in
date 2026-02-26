@@ -20,6 +20,38 @@ eq_1(r, x) >< QTreeLeaf(y) =>
 eq_1(r, x) >< BTreeLeaf(y) =>
   Eq(r) ~ (y, x);
 
+// Optionals: Some(x), None
+
+isNone(r) >< x => r ~ False, x ~ Eraser;
+isNone(r) >< int x => r ~ False;
+isNone(r) >< None => r ~ True;
+
+eq_1(r, x) >< None => isNone(r) ~ x;
+eq_1(r, x) >< Some(yval) => eq_1(r, yval) ~ x;
+
+// Values: UserValue(val), Dummy
+
+isDummy(r) >< int x => r ~ False;
+isDummy(r) >< x => r ~ False, x ~ Eraser;
+isDummy(r) >< Dummy => r ~ True;
+
+isDummyBTreeLeaf(r) >< int x => r ~ False;
+isDummyBTreeLeaf(r) >< x =>
+  x ~ Eraser,
+  r ~ False;
+isDummyBTreeLeaf(r) >< BTreeLeaf(val) =>
+  isDummy(r) ~ val;
+
+isDummyQTreeLeaf(r) >< int x => r ~ False;
+isDummyQTreeLeaf(r) >< x =>
+  x ~ Eraser,
+  r ~ False;
+isDummyQTreeLeaf(r) >< QTreeLeaf(val) =>
+  isDummy(r) ~ val;
+
+eq_1(r, x) >< Dummy => isDummy(r) ~ x;
+eq_1(r, x) >< UserValue(yval) => eq_1(r, yval) ~ x;
+
 Eq(r) >< (x, y) =>
   eq_1(r, x) ~ y;
 
@@ -40,6 +72,11 @@ And4(r) >< (a, b, c, d) =>
   And(ab) ~ (a, b),
   And(cd) ~ (c, d),
   And(r) ~ (ab, cd);
+
+or_1(r, a) >< False => r ~ a;
+or_1(r, a) >< True => r ~ True, a ~ Eraser;
+
+Or(r) >< (a, b) => or_1(r, a) ~ b;
 
 less_2(r, y) >< x => r ~ False, (y, x) ~ Eraser;
 

@@ -1,4 +1,4 @@
-// BTreeLeaf(val)
+// BTreeLeaf(UserValue(val)) | BTreeLeaf(Dummy)
 // BTreeNode(lhs, rhs)
 
 use "./src/equalities.in";
@@ -20,51 +20,145 @@ BTreeMkNode(r) >< (lhs, rhs) =>
 
 // BTreeMap2 START
 
-// Here val2 and val1 are SWAPPED. See the "call" in `BTreeMap2Decons`
-BTreeMap2DeconsLeaf(r, f, val2) >< BTreeLeaf(val1) =>
-  f ~ (w, (val1, val2)),
-  r ~ BTreeLeaf(w);
+BTreeGetNvalsDecons(r, ssize) >< None =>
+  r ~ 0,
+  ssize ~ Eraser;
+BTreeGetNvalsDecons(r, ssize) >< Some(x) =>
+  x ~ Eraser,
+  r ~ ssize;
 
-BTreeMap2DeconsLeaf(r, f, val2) >< BTreeNode(lhs, rhs) =>
-  BTreeMkNode(r) ~ (rlhs, rrhs),
+BTreeGetNvals(r) >< (ssize, x) =>
+  BTreeGetNvalsDecons(r, ssize) ~ x;
+
+BTreeMap2DeconsLeafValueValue(r, f, ssize, val2) >< Dummy =>
+  r ~ (BTreeLeaf(Dummy), 0),
+  Eraser ~ (f, ssize, val2);
+
+BTreeMap2DeconsLeafValueValue(r, f, ssize, val2) >< UserValue(val1) =>
+  f ~ (w, (val1, val2)),
+  w ~ Dup(w1, w2),
+  BTreeGetNvalsDecons(nvals, ssize) ~ w1,
+  r ~ (BTreeLeaf(UserValue(w2)), nvals);
+
+BTreeMap2DeconsLeafValue(r, f, ssize, val2) >< BTreeLeaf(val1) =>
+  BTreeMap2DeconsLeafValueValue(r, f, ssize, val2) ~ val1;
+
+BTreeMap2DeconsLeafValue(r, f, ssize, val2) >< BTreeNode(lhs, rhs) =>
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup(halfSize1, halfSize2),
   f ~ Dup(f1, f2),
   val2 ~ Dup(val2_1, val2_2),
-  BTreeMap2DeconsLeaf(rlhs, f1, val2_1) ~ lhs,
-  BTreeMap2DeconsLeaf(rrhs, f2, val2_2) ~ rhs;
+  BTreeMap2DeconsLeafValue(rlhsfull, f1, halfSize1, val2_1) ~ lhs,
+  BTreeMap2DeconsLeafValue(rrhsfull, f2, halfSize2, val2_2) ~ rhs,
+  rlhsfull ~ (rlhs, lhsnvals),
+  rrhsfull ~ (rrhs, rhsnvals),
+  rnvals << Add(lhsnvals, rhsnvals),
+  BTreeMkNode(rtree) ~ (rlhs, rrhs),
+  r ~ (rtree, rnvals);
 
-BTreeMap2DeconsNode(r, f, lhs2, rhs2) >< BTreeNode(lhs1, rhs1) =>
-  BTreeMkNode(r) ~ (rlhs, rrhs),
+BTreeMap2DeconsNode(r, f, ssize, lhs2, rhs2) >< BTreeNode(lhs1, rhs1) =>
+  r ~ (rtree, rnvals),
+  BTreeMkNode(rtree) ~ (rlhs, rrhs),
+  rlhsfull ~ (rlhs, lhsnvals),
+  rrhsfull ~ (rrhs, rhsnvals),
+  rnvals << Add(lhsnvals, rhsnvals),
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup(halfSize1, halfSize2),
   f ~ Dup(f1, f2),
-  BTreeMap2(rlhs) ~ (f1, lhs1, lhs2),
-  BTreeMap2(rrhs) ~ (f2, rhs1, rhs2);
+  BTreeMap2(rlhsfull) ~ (f1, halfSize1, lhs1, lhs2),
+  BTreeMap2(rrhsfull) ~ (f2, halfSize2, rhs1, rhs2);
 
-BTreeMap2DeconsLeafSwapped(r, f, val1) >< BTreeLeaf(val2) =>
+
+
+BTreeMap2DeconsNodeValue(r, f, ssize, lhs2, rhs2) >< Dummy =>
+  r ~ (BTreeLeaf(Dummy), 0),
+  Eraser ~ (f, ssize, lhs2, rhs2);
+
+// Insanity
+BTreeMap2DeconsNodeValueLeafValue(r, f, ssize, val1) >< Dummy =>
+  r ~ (BTreeLeaf(Dummy), 0),
+  Eraser ~ (f, ssize, val1);
+
+BTreeMap2DeconsNodeValueLeafValue(r, f, ssize, val1) >< UserValue(val2) =>
   f ~ (w, (val1, val2)),
-  r ~ BTreeLeaf(w);
+  w ~ Dup(w1, w2),
+  BTreeGetNvals(nvals) ~ (ssize, w1),
+  r ~ (BTreeLeaf(UserValue(w2)), nvals);
 
-BTreeMap2DeconsLeafSwapped(r, f, val1) >< BTreeNode(lhs, rhs) =>
-  BTreeMkNode(r) ~ (rlhs, rrhs),
+BTreeMap2DeconsNodeValueLeaf(r, f, ssize, val1) >< BTreeLeaf(val2) =>
+  BTreeMap2DeconsNodeValueLeafValue(r, f, ssize, val1) ~ val2;
+
+BTreeMap2DeconsNodeValueLeaf(r, f, ssize, val1) >< BTreeNode(lhs2, rhs2) =>
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup(halfSize1, halfSize2),
   f ~ Dup(f1, f2),
   val1 ~ Dup(val1_1, val1_2),
-  BTreeMap2DeconsLeaf(rlhs, f1, val1_1) ~ lhs,
-  BTreeMap2DeconsLeaf(rrhs, f2, val1_2) ~ rhs;
+  BTreeMap2DeconsNodeValueLeaf(rlhsfull, f1, halfSize1, val1_1) ~ lhs2,
+  BTreeMap2DeconsNodeValueLeaf(rrhsfull, f2, halfSize2, val1_2) ~ rhs2,
+  rlhsfull ~ (rlhs, lhsnvals),
+  rrhsfull ~ (rrhs, rhsnvals),
+  BTreeMkNode(rtree) ~ (rlhs, rrhs),
+  rnvals << Add(lhsnvals, rhsnvals),
+  r ~ (rtree, rnvals);
 
-BTreeMap2DeconsNode(r, f, lhs2, rhs2) >< BTreeLeaf(val1) =>
-  BTreeMkNode(r) ~ (rlhs, rrhs),
-  f ~ Dup(f1, f2),
+BTreeMap2DeconsNodeValue(r, f, ssize, lhs2, rhs2) >< UserValue(val1) =>
   val1 ~ Dup(val1_1, val1_2),
-  BTreeMap2DeconsLeafSwapped(rlhs, f1, val1_1) ~ lhs2,
-  BTreeMap2DeconsLeafSwapped(rrhs, f2, val1_2) ~ rhs2;
+  f ~ Dup(f1, f2),
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup(halfSize1, halfSize2),
+  BTreeMap2DeconsNodeValueLeaf(rlhsfull, f1, halfSize1, val1_1) ~ lhs2,
+  BTreeMap2DeconsNodeValueLeaf(rrhsfull, f2, halfSize2, val1_2) ~ rhs2,
+  rlhsfull ~ (rlhs, lhsnvals),
+  rrhsfull ~ (rrhs, rhsnvals),
+  rnvals << Add(lhsnvals, rhsnvals),
+  BTreeMkNode(rtree) ~ (rlhs, rrhs),
+  r ~ (rtree, rnvals);
 
 
-BTreeMap2Decons(r, f, tree_1) >< BTreeLeaf(val2) =>
-  BTreeMap2DeconsLeaf(r, f, val2) ~ tree_1;
+BTreeMap2DeconsNode(r, f, ssize, lhs2, rhs2) >< BTreeLeaf(val1) =>
+  BTreeMap2DeconsNodeValue(r, f, ssize, lhs2, rhs2) ~ val1;
+
+BTreeMap2DeconsLeaf(r, f, ssize, tree_1) >< Dummy =>
+  r ~ (BTreeLeaf(Dummy), 0),
+  Eraser ~ (f, ssize, tree_1);
+BTreeMap2DeconsLeaf(r, f, ssize, tree_1) >< UserValue(val2) =>
+  BTreeMap2DeconsLeafValue(r, f, ssize, val2) ~ tree_1;
+
+BTreeMap2Decons(r, f, ssize, tree_1) >< BTreeLeaf(val2) =>
+  BTreeMap2DeconsLeaf(r, f, ssize, tree_1) ~ val2;
 
 
-BTreeMap2Decons(r, f, tree_1) >< BTreeNode(lhs2, rhs2) =>
-  BTreeMap2DeconsNode(r, f, lhs2, rhs2) ~ tree_1;
+BTreeMap2Decons(r, f, ssize, tree_1) >< BTreeNode(lhs2, rhs2) =>
+  BTreeMap2DeconsNode(r, f, ssize, lhs2, rhs2) ~ tree_1;
 
-BTreeMap2(r) >< (f, tree_1, tree_2) =>
-  BTreeMap2Decons(r, f, tree_1) ~ tree_2;
+BTreeMap2(r) >< (f, ssize, tree_1, tree_2) =>
+  BTreeMap2Decons(r, f, ssize, tree_1) ~ tree_2;
 
 // BTreeMap2 END
+
+// SparseVector(length, nvals, ssize, tree)
+// Shortened to SV
+
+SVMap2Boolean(r, f, len, ssize, tree1, tree2) >< False =>
+  r ~ InconsistentStructureOfArguments,
+  Eraser ~ (f, len, ssize, tree1, tree2);
+
+SVMap2Boolean(r, f, len, ssize, tree1, tree2) >< True =>
+  BTreeMap2(w) ~ (f, ssize1, tree1, tree2),
+  ssize ~ Dup(ssize1, ssize2),
+  w ~ (tree, nvals),
+  r ~ SparseVector(len, nvals, ssize2, tree);
+
+SVMap2Decons_2(r, f, len2, ssize2, tree2) >< SparseVector(len1, nvals1, ssize1, tree1) =>
+  (len1, ssize1) ~ Dup((len1_1, ssize1_1), (len1_2, ssize1_2)),
+  Eq(len_eq) ~ (len1_1, len2),
+  Eq(ssize_eq) ~ (ssize1_1, ssize2),
+  Eraser ~ nvals1,
+  And(cond) ~ (len_eq, ssize_eq),
+  SVMap2Boolean(r, f, len1_2, ssize1_2, tree1, tree2) ~ cond;
+
+SVMap2Decons_1(r, f, sv1) >< SparseVector(len2, nvals2, ssize2, tree2) =>
+  Eraser ~ nvals2,
+  SVMap2Decons_2(r, f, len2, ssize2, tree2) ~ sv1;
+
+SVMap2(r) >< (f, sv1, sv2) => SVMap2Decons_1(r, f, sv1) ~ sv2;

@@ -1,11 +1,47 @@
 
 use "./src/vector.in";
 
+op_add_2(r, yval) >< None => r ~ Some(yval);
+op_add_2(r, yval) >< Some(xval) =>
+  w << Add(xval, yval),
+  r ~ Some(w);
+
+op_add_1(r, x) >< None => r ~ x;
+op_add_1(r, x) >< Some(yval) => op_add_2(r, yval) ~ x;
+
 op_add(r) >< (x, y) =>
-  Add(r, x) ~ y;
+  op_add_1(r, x) ~ y;
 
-tree1 ~ BTreeNode(BTreeLeaf(3), BTreeLeaf(4));
-tree2 ~ BTreeLeaf(5);
 
-BTreeMap2(r) ~ (%op_add, tree1, tree2);
+// N1N2N3DD
+
+tree1 ~ BTreeNode(
+  BTreeNode(
+    BTreeNode(
+      BTreeLeaf(UserValue(None)),
+      BTreeLeaf(UserValue(Some(1)))
+    ),
+    BTreeNode(
+      BTreeLeaf(UserValue(None)),
+      BTreeLeaf(UserValue(Some(2)))
+    )
+  ),
+  BTreeNode(
+    BTreeNode(BTreeLeaf(UserValue(None)), BTreeLeaf(UserValue(Some(3)))),
+    BTreeLeaf(Dummy)
+  )
+);
+
+// 1111NNDD
+
+tree2 ~ BTreeNode(
+  BTreeLeaf(UserValue(Some(1))),
+  BTreeNode(
+    BTreeLeaf(UserValue(None)),
+    BTreeLeaf(Dummy)
+  )
+);
+
+BTreeMap2(r) ~ (%op_add, 8, tree1, tree2);
+// 1213N3DD
 r; free tree1 tree2 r;

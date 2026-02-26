@@ -1,1 +1,1 @@
-BTreeNode(BTreeLeaf(8),BTreeLeaf(9))
+(BTreeNode(BTreeNode(BTreeNode(BTreeLeaf(UserValue(Some(1))),BTreeLeaf(UserValue(Some(2)))),BTreeNode(BTreeLeaf(UserValue(Some(1))),BTreeLeaf(UserValue(Some(3))))),BTreeNode(BTreeNode(BTreeLeaf(UserValue(None)),BTreeLeaf(UserValue(Some(3)))),BTreeLeaf(Dummy))),5)

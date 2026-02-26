@@ -2,10 +2,16 @@ use "./src/matrix.in";
 
 // QTreeNode(QTreeLeaf(3), QTreeLeaf(4), QTreeLeaf(1), QTreeLeaf(2))
 
-sum(r, 4)~QTreeNode(QTreeLeaf(3), QTreeLeaf(4), QTreeLeaf(1), QTreeLeaf(2));
+op_add_2(r, yval) >< None => r ~ Some(yval);
+op_add_2(r, yval) >< Some(xval) =>
+  w << Add(xval, yval),
+  r ~ Some(w);
 
-r; free r;
+op_add_1(r, x) >< None => r ~ x;
+op_add_1(r, x) >< Some(yval) => op_add_2(r, yval) ~ x;
 
+op_add(r) >< (x, y) =>
+  op_add_1(r, x) ~ y;
 
 
 // QTreeNode(
@@ -16,14 +22,6 @@ r; free r;
 // )
 
 
-sum(r, 4)~QTreeNode(
- QTreeNode(QTreeLeaf(2), QTreeLeaf(0), QTreeLeaf(1), QTreeLeaf(0)),
- QTreeLeaf(3),
- QTreeNode(QTreeLeaf(1), QTreeLeaf(1), QTreeLeaf(0), QTreeLeaf(1)),
- QTreeLeaf(0)
-);
-
-r; free r;
 
 Eq(r)~(QTreeLeaf(3), QTreeLeaf(3));
 r; free r;
@@ -32,24 +30,76 @@ r; free r;
 QTreeMkNode(r) ~ (QTreeLeaf(3), QTreeLeaf(3), QTreeLeaf(3), QTreeLeaf(3));
 r; free r;
 
-QTreeMkNode(r) ~ (QTreeNode(QTreeLeaf(1), QTreeLeaf(2), QTreeLeaf(3), QTreeLeaf(4)), QTreeLeaf(5), QTreeLeaf(6), QTreeLeaf(7));
+QTreeMkNode(r) ~ (
+  QTreeNode(QTreeLeaf(1), QTreeLeaf(2), QTreeLeaf(3), QTreeLeaf(4)),
+  QTreeLeaf(5),
+  QTreeLeaf(6),
+  QTreeLeaf(7));
 r; free r;
 
-QTreeMkNode(tree1) ~ (QTreeLeaf(1), QTreeLeaf(2), QTreeLeaf(3), QTreeLeaf(4));
-tree2 ~ QTreeLeaf(1);
-op_add(r) >< (x, y) =>
-  Add(r, x) ~ y;
+QTreeMkNode(tree1) ~ (
+  QTreeLeaf(UserValue(Some(1))),
+  QTreeLeaf(UserValue(Some(2))),
+  QTreeLeaf(UserValue(Some(3))),
+  QTreeLeaf(UserValue(Some(4)))
+);
+tree2 ~ QTreeLeaf(UserValue(Some(1)));
 
-QTreeMap2(r, %op_add, tree1) ~ tree2;
+QTreeMap2(r) ~ (%op_add, 8, tree1, tree2);
 r; free r tree1 tree2;
 
-QTreeMkNode(tree1) ~ (QTreeLeaf(1), QTreeLeaf(2), QTreeLeaf(3), QTreeLeaf(4));
-QTreeMkNode(tree2) ~ (QTreeLeaf(1), QTreeLeaf(2), QTreeLeaf(3), QTreeLeaf(4));
+// NN1D
+// NN2D
+// 123D
+// DDDD
 
-QTreeMap2(r, %op_add, tree1) ~ tree2;
-r; free r tree1 tree2 op_add;
+tree1 ~ QTreeNode(
+  QTreeLeaf(UserValue(None)),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(1))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(UserValue(Some(2))),
+    QTreeLeaf(Dummy)
+  ),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(1))),
+    QTreeLeaf(UserValue(Some(2))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy)
+  ),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(3))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy)
+  )
+);
 
+tree2 ~ QTreeNode(
+  QTreeLeaf(UserValue(None)),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(1))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(UserValue(Some(2))),
+    QTreeLeaf(Dummy)
+  ),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(1))),
+    QTreeLeaf(UserValue(Some(2))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy)
+  ),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(3))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy)
+  )
+);
+
+QTreeMap2(r) ~ (%op_add, 4, tree1, tree2);
+r; free r tree1 tree2;
 
 coo ~ [(0, 0, 1)];
-FromCoordinateList(r, 4) ~ coo;
+QTreeFromCoordinateList(r) ~ (3, 3, 4, coo);
 r; free r coo;

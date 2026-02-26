@@ -1,5 +1,6 @@
-16
-QTreeLeaf(8)
-QTreeNode(QTreeNode(QTreeLeaf(4),QTreeLeaf(5),QTreeLeaf(0),QTreeLeaf(0)),QTreeNode(QTreeLeaf(6),QTreeLeaf(0),QTreeLeaf(0),QTreeLeaf(0)),QTreeNode(QTreeLeaf(12),QTreeLeaf(15),QTreeLeaf(0),QTreeLeaf(0)),QTreeNode(QTreeLeaf(18),QTreeLeaf(0),QTreeLeaf(0),QTreeLeaf(0))) 60
-QTreeNode(QTreeNode(QTreeLeaf(1),QTreeLeaf(0),QTreeLeaf(0),QTreeLeaf(1)),QTreeLeaf(0),QTreeNode(QTreeLeaf(1),QTreeLeaf(0),QTreeLeaf(0),QTreeLeaf(1)),QTreeLeaf(0))
-BTreeNode(BTreeLeaf(6),BTreeNode(BTreeLeaf(14),BTreeLeaf(10)))
+Some(16)
+(QTreeLeaf(UserValue(Some(8))),16)
+(QTreeLeaf(Dummy),0)
+(QTreeNode(QTreeNode(QTreeLeaf(UserValue(Some(4))),QTreeLeaf(UserValue(Some(5))),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None))),QTreeNode(QTreeLeaf(UserValue(Some(6))),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None))),QTreeNode(QTreeLeaf(UserValue(Some(12))),QTreeLeaf(UserValue(Some(15))),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None))),QTreeNode(QTreeLeaf(UserValue(Some(18))),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None)))),6)
+(QTreeNode(QTreeNode(QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(Some(1)))),QTreeNode(QTreeLeaf(UserValue(Some(1))),QTreeLeaf(Dummy),QTreeLeaf(UserValue(None)),QTreeLeaf(Dummy)),QTreeNode(QTreeLeaf(UserValue(Some(1))),QTreeLeaf(UserValue(None)),QTreeLeaf(Dummy),QTreeLeaf(Dummy)),QTreeNode(QTreeLeaf(UserValue(None)),QTreeLeaf(Dummy),QTreeLeaf(Dummy),QTreeLeaf(Dummy))),3)
+(BTreeNode(BTreeLeaf(UserValue(Some(6))),BTreeNode(BTreeLeaf(UserValue(Some(14))),BTreeLeaf(UserValue(Some(10))))),4)

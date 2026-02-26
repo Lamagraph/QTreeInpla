@@ -1,8 +1,6 @@
-40
-18
 True
 QTreeLeaf(3)
 QTreeNode(QTreeNode(QTreeLeaf(1),QTreeLeaf(2),QTreeLeaf(3),QTreeLeaf(4)),QTreeLeaf(5),QTreeLeaf(6),QTreeLeaf(7))
-QTreeNode(QTreeLeaf(2),QTreeLeaf(3),QTreeLeaf(4),QTreeLeaf(5))
-QTreeNode(QTreeLeaf(2),QTreeLeaf(4),QTreeLeaf(6),QTreeLeaf(8))
-QTreeNode(QTreeNode(QTreeLeaf(1),QTreeLeaf(0),QTreeLeaf(0),QTreeLeaf(0)),QTreeLeaf(0),QTreeLeaf(0),QTreeLeaf(0))
+(QTreeNode(QTreeLeaf(UserValue(Some(2))),QTreeLeaf(UserValue(Some(3))),QTreeLeaf(UserValue(Some(4))),QTreeLeaf(UserValue(Some(5)))),64)
+(QTreeNode(QTreeLeaf(UserValue(None)),QTreeNode(QTreeLeaf(UserValue(Some(2))),QTreeLeaf(Dummy),QTreeLeaf(UserValue(Some(4))),QTreeLeaf(Dummy)),QTreeNode(QTreeLeaf(UserValue(Some(2))),QTreeLeaf(UserValue(Some(4))),QTreeLeaf(Dummy),QTreeLeaf(Dummy)),QTreeNode(QTreeLeaf(UserValue(Some(6))),QTreeLeaf(Dummy),QTreeLeaf(Dummy),QTreeLeaf(Dummy))),5)
+QTreeNode(QTreeNode(QTreeLeaf(UserValue(Some(1))),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None))),QTreeNode(QTreeLeaf(UserValue(None)),QTreeLeaf(Dummy),QTreeLeaf(UserValue(None)),QTreeLeaf(Dummy)),QTreeNode(QTreeLeaf(UserValue(None)),QTreeLeaf(UserValue(None)),QTreeLeaf(Dummy),QTreeLeaf(Dummy)),QTreeNode(QTreeLeaf(UserValue(None)),QTreeLeaf(Dummy),QTreeLeaf(Dummy),QTreeLeaf(Dummy)))

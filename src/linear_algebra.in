@@ -20,11 +20,31 @@ MultScalar(r, op_add, x) >< int size
 
 // QTreeMultiplication(mxm predecessor) START
 
+UserValueGetValue(r) >< UserValue(val) => r ~ val;
+
+mAddDummyCheck(r, op_add, ssize, tree1_nvals, tree1, tree2) >< True =>
+  r ~ (tree1, tree1_nvals),
+  Eraser ~ (op_add, ssize, tree2);
+
+mAddDummyCheck(r, op_add, ssize, tree1_nvals, tree1, tree2) >< False =>
+  QTreeMap2(r) ~ (op_add, ssize, tree1, tree2),
+  Eraser ~ tree1_nvals;
+
+mAdd(r) >< (op_add, ssize, tree1_nvals, tree1, tree2) =>
+  tree2 ~ Dup(tree2_1, tree2_2),
+  isDummyQTreeLeaf(tree2isDummy) ~ tree2_1,
+  mAddDummyCheck(r, op_add, ssize, tree1_nvals, tree1, tree2_2) ~ tree2isDummy;
+
 // Whenever in the lhs we got QTreeLeaf(val2), and we have tree1 in the lhs
-QTreeMultiplyDeconsVal2(r, op_add, op_mul, size, val2) >< QTreeLeaf(val1) =>
+QTreeMultiplyDeconsVal2(r, op_add, op_mul, size, vval2) >< QTreeLeaf(vval1) =>
+  UserValueGetValue(val1) ~ vval1, UserValueGetValue(val2) ~ vval2,
   op_mul ~ (multiplied, (val1, val2)),
-  rval << MultScalar(op_add, multiplied, size),
-  r ~ QTreeLeaf(rval);
+  size ~ Dup(size1, size2),
+  rval << MultScalar(op_add, multiplied, size1),
+  rval ~ Dup(rval1, rval2),
+  QTreeGetNvals(nvals) ~ (size2, rval1),
+  r ~ (QTreeLeaf(UserValue(rval2)), nvals);
+
 QTreeMultiplyDeconsVal2(r, op_add, op_mul, size, val2) >< QTreeNode(nw, ne, sw, se) =>
   val2 ~ Dup4(val2_1, val2_2, val2_3, val2_4),
   QTreeDivided(r, op_add, op_mul, size, nw, ne, sw, se) ~
@@ -39,9 +59,10 @@ QTreeMultiplyDeconsVal2(r, op_add, op_mul, size, val2) >< QTreeNode(nw, ne, sw, 
 // Helper function when two qtrees are already divided into nodes
 QTreeDivided(r, op_add, op_mul, size, nw1, ne1, sw1, se1) >< QTreeNode(nw2, ne2, sw2, se2) =>
   thalfSize << Div(size, 2),
-  thalfSize ~ Dup(thalfSize1, thalfSize2),
+  thalfSize ~ Dup3(thalfSize1, thalfSize2, thalfSize3),
   thalfSize1 ~ Dup4(halfSize1, halfSize2, halfSize3, halfSize4),
   thalfSize2 ~ Dup4(halfSize5, halfSize6, halfSize7, halfSize8),
+  thalfSize3 ~ Dup4(halfSize9, halfSize10, halfSize11, halfSize12),
   op_add ~ Dup3(top_add1, top_add2, top_add3),
   top_add1 ~ Dup4(op_add1, op_add2, op_add3, op_add4),
   top_add2 ~ Dup4(op_add5, op_add6, op_add7, op_add8),
@@ -62,22 +83,41 @@ QTreeDivided(r, op_add, op_mul, size, nw1, ne1, sw1, se1) >< QTreeNode(nw2, ne2,
 
   // nw1_x_nw2, ne1_x_sw2, nw1_x_ne2, ne1_x_se2, sw1_x_nw2, se1_x_sw2, sw1_x_ne2, se1_x_se2
   // Double check this code
-  QTreeMultiplication(nw1_x_nw2, op_add1, op_mul1, halfSize1, nw1_1) ~ nw2_1,
-  QTreeMultiplication(ne1_x_sw2, op_add2, op_mul2, halfSize2, ne1_1) ~ sw2_1,
-  QTreeMultiplication(nw1_x_ne2, op_add3, op_mul3, halfSize3, nw1_2) ~ ne2_1,
-  QTreeMultiplication(ne1_x_se2, op_add4, op_mul4, halfSize4, ne1_2) ~ se2_1,
-  QTreeMultiplication(sw1_x_nw2, op_add5, op_mul5, halfSize5, sw1_1) ~ nw2_2,
-  QTreeMultiplication(se1_x_sw2, op_add6, op_mul6, halfSize6, se1_1) ~ sw2_2,
-  QTreeMultiplication(sw1_x_ne2, op_add7, op_mul7, halfSize7, sw1_2) ~ ne2_2,
-  QTreeMultiplication(se1_x_se2, op_add8, op_mul8, halfSize8, se1_2) ~ se2_2,
+  QTreeMultiplication(nw1_x_nw2full) ~ (op_add1, op_mul1, halfSize1, nw1_1, nw2_1),
+  QTreeMultiplication(ne1_x_sw2full) ~ (op_add2, op_mul2, halfSize2, ne1_1, sw2_1),
+  QTreeMultiplication(nw1_x_ne2full) ~ (op_add3, op_mul3, halfSize3, nw1_2, ne2_1),
+  QTreeMultiplication(ne1_x_se2full) ~ (op_add4, op_mul4, halfSize4, ne1_2, se2_1),
+  QTreeMultiplication(sw1_x_nw2full) ~ (op_add5, op_mul5, halfSize5, sw1_1, nw2_2),
+  QTreeMultiplication(se1_x_sw2full) ~ (op_add6, op_mul6, halfSize6, se1_1, sw2_2),
+  QTreeMultiplication(sw1_x_ne2full) ~ (op_add7, op_mul7, halfSize7, sw1_2, ne2_2),
+  QTreeMultiplication(se1_x_se2full) ~ (op_add8, op_mul8, halfSize8, se1_2, se2_2),
+
+  nw1_x_nw2full ~ (nw1_x_nw2, nw1_x_nw2_nvals),
+  ne1_x_sw2full ~ (ne1_x_sw2, ne1_x_sw2_nvals),
+  nw1_x_ne2full ~ (nw1_x_ne2, nw1_x_ne2_nvals),
+  ne1_x_se2full ~ (ne1_x_se2, ne1_x_se2_nvals),
+  sw1_x_nw2full ~ (sw1_x_nw2, sw1_x_nw2_nvals),
+  se1_x_sw2full ~ (se1_x_sw2, se1_x_sw2_nvals),
+  sw1_x_ne2full ~ (sw1_x_ne2, sw1_x_ne2_nvals),
+  se1_x_se2full ~ (se1_x_se2, se1_x_se2_nvals),
+
+  Eraser ~ (ne1_x_sw2_nvals, ne1_x_se2_nvals, se1_x_sw2_nvals, se1_x_se2_nvals),
 
   // Adding
-  rnw << QTreeMap2(op_add9, nw1_x_nw2, ne1_x_sw2),
-  rne << QTreeMap2(op_add10, nw1_x_ne2, ne1_x_se2),
-  rsw << QTreeMap2(op_add11, sw1_x_nw2, se1_x_sw2),
-  rse << QTreeMap2(op_add12, sw1_x_ne2, se1_x_se2),
+  mAdd(rnwfull) ~ (op_add9, halfSize9, nw1_x_nw2_nvals, nw1_x_nw2, ne1_x_sw2),
+  mAdd(rnefull) ~ (op_add10, halfSize10, nw1_x_ne2_nvals, nw1_x_ne2, ne1_x_se2),
+  mAdd(rswfull) ~ (op_add11, halfSize11, sw1_x_nw2_nvals, sw1_x_nw2, se1_x_sw2),
+  mAdd(rsefull) ~ (op_add12, halfSize12, sw1_x_ne2_nvals, sw1_x_ne2, se1_x_se2),
 
-  QTreeMkNode(r) ~ (rnw, rne, rsw, rse);
+  rnwfull ~ (rnw, nwvals),
+  rnefull ~ (rne, nevals),
+  rswfull ~ (rsw, swvals),
+  rsefull ~ (rse, sevals),
+
+  nvals << Add4(nwvals, nevals, swvals, sevals),
+
+  QTreeMkNode(rtree) ~ (rnw, rne, rsw, rse),
+  r ~ (rtree, nvals);
 
 
 QTreeDividedSwapped(r, op_add, op_mul, size, nw, ne, sw, se) >< QTreeLeaf(val1) =>
@@ -88,19 +128,38 @@ QTreeDividedSwapped(r, op_add, op_mul, size, nw, ne, sw, se) >< QTreeLeaf(val1) 
 QTreeDividedSwapped(r, op_add, op_mul, size, nw2, ne2, sw2, se2) >< QTreeNode(nw1, ne1, sw1, se1) =>
   QTreeDivided(r, op_add, op_mul, size, nw1, ne1, sw1, se1) ~ QTreeNode(nw2, ne2, sw2, se2);
 
-QTreeMultiplication(r, op_add, op_mul, size, tree1) >< QTreeLeaf(val2) =>
+QTreeMultiplicationDecons(r, op_add, op_mul, size, tree1) >< QTreeLeaf(val2) =>
   QTreeMultiplyDeconsVal2(r, op_add, op_mul, size, val2) ~ tree1;
-QTreeMultiplication(r, op_add, op_mul, size, tree1) >< QTreeNode(nw, ne, sw, se) =>
+QTreeMultiplicationDecons(r, op_add, op_mul, size, tree1) >< QTreeNode(nw, ne, sw, se) =>
   QTreeDividedSwapped(r, op_add, op_mul, size, nw, ne, sw, se) ~ tree1;
+
+QTreeMultiplicationDummyCheck(r, op_add, op_mul, size, tree1, tree2) >< False =>
+  r << QTreeMultiplicationDecons(op_add, op_mul, size, tree1, tree2);
+
+QTreeMultiplicationDummyCheck(r, op_add, op_mul, size, tree1, tree2) >< True =>
+  r ~ (QTreeLeaf(Dummy), 0),
+  Eraser ~ (op_add, op_mul, size, tree1, tree2);
+
+QTreeMultiplication(r) >< (op_add, op_mul, size, tree1, tree2) =>
+  tree1 ~ Dup(tree1_1, tree1_2),
+  tree2 ~ Dup(tree2_1, tree2_2),
+  isDummyQTreeLeaf(tree1isDummy) ~ tree1_1,
+  isDummyQTreeLeaf(tree2isDummy) ~ tree2_1,
+  Or(areDummies) ~ (tree1isDummy, tree2isDummy),
+  QTreeMultiplicationDummyCheck(r, op_add, op_mul, size, tree1_2, tree2_2) ~ areDummies;
 
 // QTreeMultiplication(mxm predecessor) END
 
 // BTreeQTreeMultiplication (vxm predecessor) BEGIN
 
-BTreeQTreeMultiplicationDeconsQLeaf(r, op_add, op_mul, size, qval) >< BTreeLeaf(bval) =>
-  MultScalar(rval, op_add, mulval) ~ size,
+BTreeQTreeMultiplicationDeconsQLeaf(r, op_add, op_mul, size, qvval) >< BTreeLeaf(bvval) =>
+  UserValueGetValue(qval) ~ qvval, UserValueGetValue(bval) ~ bvval,
+  size ~ Dup(size1, size2),
+  MultScalar(rval, op_add, mulval) ~ size1,
   op_mul ~ (mulval, (bval, qval)),
-  r ~ BTreeLeaf(rval);
+  rval ~ Dup(rval1, rval2),
+  BTreeGetNvals(nvals) ~ (size2, rval1),
+  r ~ (BTreeLeaf(UserValue(rval2)), nvals);
 
 BTreeQTreeMultiplicationDeconsQLeaf(r, op_add, op_mul, size, qval) >< BTreeNode(lhs, rhs) =>
   halfSize << Div(size, 2),
@@ -120,9 +179,24 @@ BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) >< 
       BTreeLeaf(bval2)
     );
 
+vAddDummyCheck(r, op_add, ssize, lhs_nvals, lhs, rhs) >< True =>
+  r ~ (lhs, lhs_nvals),
+  Eraser ~ (op_add, ssize, rhs);
+
+vAddDummyCheck(r, op_add, ssize, lhs_nvals, lhs, rhs) >< False =>
+  BTreeMap2(r) ~ (op_add, ssize, lhs, rhs),
+  Eraser ~ lhs_nvals;
+
+vAdd(r) >< (op_add, ssize, lhs_nvals, lhs, rhs) =>
+  rhs ~ Dup(rhs1, rhs2),
+  isDummyBTreeLeaf(rhsIsDummy) ~ (rhs1),
+  vAddDummyCheck(r, op_add, ssize, lhs_nvals, lhs, rhs2) ~ rhsIsDummy;
+
 BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) >< BTreeNode(lhs, rhs) =>
   halfSize << Div(size, 2),
-  halfSize ~ Dup4(halfSize1, halfSize2, halfSize3, halfSize4),
+  halfSize ~ Dup(thalfSize1, thalfSize2),
+  thalfSize1 ~ Dup4(halfSize1, halfSize2, halfSize3, halfSize4),
+  thalfSize2 ~ Dup(halfSize5, halfSize6),
   op_add ~ Dup(top_add1, top_add2),
   top_add1 ~ Dup4(op_add1, op_add2, op_add3, op_add4),
   top_add2 ~ Dup(op_add5, op_add6),
@@ -131,16 +205,28 @@ BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) >< 
   (lhs, rhs) ~ Dup((lhs1, rhs1), (lhs2, rhs2)),
 
   // lhs_x_nw, lhs_x_ne, rhs_x_sw, rhs_x_se
-  BTreeQTreeMultiplication(lhs_x_nw) ~ (op_add1, op_mul1, halfSize1, lhs1, nw),
-  BTreeQTreeMultiplication(lhs_x_ne) ~ (op_add2, op_mul2, halfSize2, lhs2, ne),
-  BTreeQTreeMultiplication(rhs_x_sw) ~ (op_add3, op_mul3, halfSize3, rhs1, sw),
-  BTreeQTreeMultiplication(rhs_x_se) ~ (op_add4, op_mul4, halfSize4, rhs2, se),
+  BTreeQTreeMultiplication(lhs_x_nwfull) ~ (op_add1, op_mul1, halfSize1, lhs1, nw),
+  BTreeQTreeMultiplication(lhs_x_nefull) ~ (op_add2, op_mul2, halfSize2, lhs2, ne),
+  BTreeQTreeMultiplication(rhs_x_swfull) ~ (op_add3, op_mul3, halfSize3, rhs1, sw),
+  BTreeQTreeMultiplication(rhs_x_sefull) ~ (op_add4, op_mul4, halfSize4, rhs2, se),
 
+  lhs_x_nwfull ~ (lhs_x_nw, lhs_x_nw_nvals),
+  lhs_x_nefull ~ (lhs_x_ne, lhs_x_ne_nvals),
+  rhs_x_swfull ~ (rhs_x_sw, rhs_x_sw_nvals),
+  rhs_x_sefull ~ (rhs_x_se, rhs_x_se_nvals),
+
+  Eraser ~ (rhs_x_se_nvals, rhs_x_sw_nvals),
   // Adding lhs_x_nw + rhs_x_sw, lhs_x_ne + rhs_x_se
-  BTreeMap2(rlhs) ~ (op_add5, lhs_x_nw, rhs_x_sw),
-  BTreeMap2(rrhs) ~ (op_add6, lhs_x_ne, rhs_x_se),
+  vAdd(rlhsfull) ~ (op_add5, halfSize5, lhs_x_nw_nvals, lhs_x_nw, rhs_x_sw),
+  vAdd(rrhsfull) ~ (op_add6, halfSize6, lhs_x_ne_nvals, lhs_x_ne, rhs_x_se),
 
-  BTreeMkNode(r) ~ (rlhs, rrhs);
+  rlhsfull ~ (rlhs, rlhs_nvals),
+  rrhsfull ~ (rrhs, rrhs_nvals),
+  nvals << Add(rlhs_nvals, rrhs_nvals),
+
+  BTreeMkNode(rtree) ~ (rlhs, rrhs),
+  r ~ (rtree, nvals);
+
 
 BTreeQTreeMultiplicationDecons(r, op_add, op_mul, size, vtree) >< QTreeLeaf(qval) =>
   BTreeQTreeMultiplicationDeconsQLeaf(r, op_add, op_mul, size, qval) ~ vtree;
@@ -148,7 +234,20 @@ BTreeQTreeMultiplicationDecons(r, op_add, op_mul, size, vtree) >< QTreeLeaf(qval
 BTreeQTreeMultiplicationDecons(r, op_add, op_mul, size, vtree) >< QTreeNode(nw, ne, sw, se) =>
   BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) ~ vtree;
 
-BTreeQTreeMultiplication(r) >< (op_add, op_mul, size, vtree, qtree) =>
+BTreeQTreeMultiplicationDummyCheck(r, op_add, op_mul, size, vtree, qtree) >< True =>
+  r ~ (BTreeLeaf(Dummy), 0),
+  Eraser ~ (op_add, op_mul, size, vtree, qtree);
+
+BTreeQTreeMultiplicationDummyCheck(r, op_add, op_mul, size, vtree, qtree) >< False =>
   r << BTreeQTreeMultiplicationDecons(op_add, op_mul, size, vtree, qtree);
+
+BTreeQTreeMultiplication(r) >< (op_add, op_mul, size, vtree, qtree) =>
+  vtree ~ Dup(vtree1, vtree2),
+  qtree ~ Dup(qtree1, qtree2),
+  isDummyBTreeLeaf(vtreeIsDummy) ~ vtree1,
+  isDummyQTreeLeaf(qtreeIsDummy) ~ qtree1,
+  Or(areDummies) ~ (vtreeIsDummy, qtreeIsDummy),
+  BTreeQTreeMultiplicationDummyCheck(r, op_add, op_mul, size, vtree2, qtree2) ~ areDummies;
+
 
 // BTreeQTreeMultiplication (vxm predecessor) END

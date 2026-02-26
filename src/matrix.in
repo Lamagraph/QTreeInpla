@@ -1,5 +1,5 @@
 // QTreeNode(nw,ne,sw,se);
-// QTreeLeaf(val);
+// QTreeLeaf(UserValue(val)) | QTreeLeaf(Dummy)
 // TODO: rewrite assuming QTrees use None/Some(x)
 
 use "./src/equalities.in";
@@ -24,25 +24,15 @@ Dup4(x1, x2, x3, x4) >< int x =>
   Dup(x1, x2) ~ t1,
   Dup(x3, x4) ~ t2;
 
-sum(ret, size) >< QTreeNode(nw,ne,sw,se) =>
-  Add(ret, lhsret)~rhsret,
-  Add(lhsret, nwsum)~nesum,
-  Add(rhsret, swsum)~sesum,
-  halfSize << Div(size, 2),
-  Dup4(halfSize1, halfSize2, halfSize3, halfSize4) ~ halfSize,
-  sum(nwsum, halfSize1)~nw,
-  sum(nesum, halfSize2)~ne,
-  sum(swsum, halfSize3)~sw,
-  sum(sesum, halfSize4)~se;
+Add4(r, x1, x2, x3) >< int x4 =>
+  x12 << Add(x1, x2),
+  x34 << Add(x3, x4),
+  r << Add(x12, x34);
 
-sum(ret, size) >< QTreeLeaf(val) =>
-  Mul(ret, val)~area,
-  Mul(area, size1)~size2,
-  Dup(size1, size2)~size;
-
-
-If(r, true_branch, false_branch) >< True => Eraser ~ false_branch, r ~ true_branch;
-If(r, true_branch, false_branch) >< False => Eraser ~ true_branch, r ~ false_branch;
+Add4(r, x1, x2, x3) >< x4 =>
+  x12 << Add(x1, x2),
+  x34 << Add(x3, x4),
+  r << Add(x12, x34);
 
 
 qtreemkNode_1(r, nw, ne, sw, se) >< True =>
@@ -72,64 +62,99 @@ QTreeMkNode(r) >< (nw, ne, sw, se) =>
 
 // Map2 start
 
-// TODO: Rename
-// This *function* gets called with val2 qtree
-// already deconstructed so they are swapped
-QTreeMap2Leafs(r, f, val2) >< QTreeLeaf(val1) =>
-  f ~ (w, (val1, val2)),
-  r ~ QTreeLeaf(w);
-QTreeMap2Leafs(r, f, val2) >< QTreeNode(nw, ne, sw, se) =>
-  QTreeMkNode(r) ~ (rnw, rne, rsw, rse),
+QTreeGetNvalsDecons(r, ssize) >< None =>
+  r ~ 0,
+  Eraser ~ ssize;
+
+QTreeGetNvalsDecons(r, ssize) >< Some(x) =>
+  Eraser ~ x,
+  ssize ~ Dup(ssize1, ssize2),
+  area << Mul(ssize1, ssize2),
+  r ~ area;
+
+QTreeGetNvals(r) >< (ssize, x) =>
+  QTreeGetNvalsDecons(r, ssize) ~ x;
+
+QTreeMap2LeafValue(r, f, ssize, val2) >< QTreeNode(nw, ne, sw, se) =>
   val2 ~ Dup4(val2_1, val2_2, val2_3, val2_4),
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup4(halfSize1, halfSize2, halfSize3, halfSize4),
   f ~ Dup4(f1, f2, f3, f4),
-  QTreeMap2Leafs(rnw, f1, val2_1) ~ nw,
-  QTreeMap2Leafs(rne, f2, val2_2) ~ ne,
-  QTreeMap2Leafs(rsw, f3, val2_3) ~ sw,
-  QTreeMap2Leafs(rse, f4, val2_4) ~ se;
+  nwfull << QTreeMap2LeafValue(f1, halfSize1, val2_1, nw),
+  nefull << QTreeMap2LeafValue(f2, halfSize2, val2_2, ne),
+  swfull << QTreeMap2LeafValue(f3, halfSize3, val2_3, sw),
+  sefull << QTreeMap2LeafValue(f4, halfSize4, val2_4, se),
+  nwfull ~ (nwtree, nwvals),
+  nefull ~ (netree, nevals),
+  swfull ~ (swtree, swvals),
+  sefull ~ (setree, sevals),
+  nvals << Add4(nwvals, nevals, swvals, sevals),
+  QTreeMkNode(tree) ~ (nwtree, netree, swtree, setree),
+  r ~ (tree, nvals);
 
-// To preserve generality(absence of commutativity)
-// We need two functions at the same time
-QTreeMap2LeafsSwapped(r, f, val1) >< QTreeLeaf(val2) =>
+
+QTreeMap2LeafValueLeaf(r, f, ssize, val2) >< Dummy =>
+  r ~ (QTreeLeaf(Dummy), 0),
+  Eraser ~ (f, ssize, val2);
+
+QTreeMap2LeafValueLeaf(r, f, ssize, val2) >< UserValue(val1) =>
   f ~ (w, (val1, val2)),
-  r ~ QTreeLeaf(w);
+  w ~ Dup(w1, w2),
+  QTreeGetNvals(nvals) ~ (ssize, w1),
+  r ~ (QTreeLeaf(UserValue(w2)), nvals);
 
-// Todo: rename val2 with val1
-QTreeMap2LeafsSwapped(r, f, val2) >< QTreeNode(nw, ne, sw, se) =>
-  QTreeMkNode(r) ~ (rnw, rne, rsw, rse),
-  val2 ~ Dup4(val2_1, val2_2, val2_3, val2_4),
-  f ~ Dup4(f1, f2, f3, f4),
-  QTreeMap2Leafs(rnw, f1, val2_1) ~ nw,
-  QTreeMap2Leafs(rne, f2, val2_2) ~ ne,
-  QTreeMap2Leafs(rsw, f3, val2_3) ~ sw,
-  QTreeMap2Leafs(rse, f4, val2_4) ~ se;
+QTreeMap2LeafValue(r, f, ssize, val2) >< QTreeLeaf(val1) =>
+  QTreeMap2LeafValueLeaf(r, f, ssize, val2) ~ val1;
 
-QTreeMap2Nodes(r, f, nw, ne, sw, se) >< QTreeLeaf(val1) =>
-  QTreeMkNode(r) ~ (rnw, rne, rsw, rse),
+QTreeMap2Leaf(r, f, ssize, tree1) >< Dummy =>
+  r ~ (QTreeLeaf(Dummy), 0),
+  Eraser ~ (f, ssize, tree1);
+QTreeMap2Leaf(r, f, ssize, tree1) >< UserValue(val2) =>
+  QTreeMap2LeafValue(r, f, ssize, val2) ~ tree1;
+
+QTreeMap2Nodes(r, f, ssize, nw2, ne2, sw2, se2) >< QTreeLeaf(val1) =>
   val1 ~ Dup4(val1_1, val1_2, val1_3, val1_4),
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup4(halfSize1, halfSize2, halfSize3, halfSize4),
   f ~ Dup4(f1, f2, f3, f4),
-  QTreeMap2LeafsSwapped(rnw, f1, val1_1) ~ nw,
-  QTreeMap2LeafsSwapped(rne, f2, val1_2) ~ ne,
-  QTreeMap2LeafsSwapped(rsw, f3, val1_3) ~ sw,
-  QTreeMap2LeafsSwapped(rse, f4, val1_4) ~ se;
+  nwfull << QTreeMap2Decons(f1, halfSize1, QTreeLeaf(val1_1), nw2),
+  nefull << QTreeMap2Decons(f2, halfSize2, QTreeLeaf(val1_2), ne2),
+  swfull << QTreeMap2Decons(f3, halfSize3, QTreeLeaf(val1_3), sw2),
+  sefull << QTreeMap2Decons(f4, halfSize4, QTreeLeaf(val1_4), se2),
+  nwfull ~ (nwtree, nwvals),
+  nefull ~ (netree, nevals),
+  swfull ~ (swtree, swvals),
+  sefull ~ (setree, sevals),
+  nvals << Add4(nwvals, nevals, swvals, sevals),
+  QTreeMkNode(tree) ~ (nwtree, netree, swtree, setree),
+  r ~ (tree, nvals);
 
-QTreeMap2Nodes(r, f, nw2, ne2, sw2, se2) >< QTreeNode(nw1, ne1, sw1, se1) =>
-  QTreeMkNode(r) ~ (rnw, rne, rsw, rse),
+QTreeMap2Nodes(r, f, ssize, nw2, ne2, sw2, se2) >< QTreeNode(nw1, ne1, sw1, se1) =>
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup4(halfSize1, halfSize2, halfSize3, halfSize4),
   f ~ Dup4(f1, f2, f3, f4),
-  QTreeMap2(rnw, f1, nw1) ~ nw2,
-  QTreeMap2(rne, f2, ne1) ~ ne2,
-  QTreeMap2(rsw, f3, sw1) ~ sw2,
-  QTreeMap2(rse, f4, se1) ~ se2;
+  nwfull << QTreeMap2Decons(f1, halfSize1, nw1, nw2),
+  nefull << QTreeMap2Decons(f2, halfSize2, ne1, ne2),
+  swfull << QTreeMap2Decons(f3, halfSize3, sw1, sw2),
+  sefull << QTreeMap2Decons(f4, halfSize4, se1, se2),
+  nwfull ~ (nwtree, nwvals),
+  nefull ~ (netree, nevals),
+  swfull ~ (swtree, swvals),
+  sefull ~ (setree, sevals),
+  nvals << Add4(nwvals, nevals, swvals, sevals),
+  QTreeMkNode(tree) ~ (nwtree, netree, swtree, setree),
+  r ~ (tree, nvals);
+
+QTreeMap2Decons(r, f, ssize, tree1) >< QTreeLeaf(val2) =>
+  QTreeMap2Leaf(r, f, ssize, tree1) ~ val2;
+
+QTreeMap2Decons(r, f, ssize, tree1) >< QTreeNode(nw2, ne2, sw2, se2) =>
+  QTreeMap2Nodes(r, f, ssize, nw2, ne2, sw2, se2) ~ tree1;
 
 
-// TODO: Use this *calling* convention:
-// F(r) ~ (arg1, arg2, ...) => f_1(r, arg1, ...) ~ argn;
-// f_1(r, arg1, ...) ~ argn_decons(...)
-QTreeMap2(r, f, tree1) >< QTreeLeaf(int val) =>
-  QTreeMap2Leafs(r, f, val) ~ tree1;
-
-QTreeMap2(r, f, tree1) >< QTreeNode(nw, ne, sw, se) =>
-  QTreeMap2Nodes(r, f, nw, ne, sw, se) ~ tree1;
-
+// Returns (QTree, nvals)
+QTreeMap2(r) >< (f, ssize, tree1, tree2) =>
+  QTreeMap2Decons(r, f, ssize, tree1) ~ tree2;
 
 // Map2 end
 
@@ -171,17 +196,22 @@ isEntryInCoords(r, pr, pc, size) >< (i, j, val) =>
 
 
 // Bool at the end: i == pr && j == pc && size == 1
-cooTraverseDeconsBoolean(r, pr, pc, size, xs, i, j, val) >< True =>
-  r ~ QTreeLeaf(val),
-  Eraser ~ (pr, pc, size, i, j, xs);
-cooTraverseDeconsBoolean(r, pr, pc, size, xs, i, j, val) >< False =>
+// 10 ports!!!           1  2      3      4      5   6   7   8  9  10
+cooTraverseDeconsBoolean(r, nrows, ncols, ssize, pr, pc, xs, i, j, val) >< True =>
+  r ~ QTreeLeaf(UserValue(Some(val))),
+  Eraser ~ (pr, pc, nrows, ncols, ssize, i, j, xs);
+cooTraverseDeconsBoolean(r, nrows, ncols, ssize, pr, pc, xs, i, j, val) >< False =>
+  cooTraverseList(r, nrows, ncols, ssize, pr, pc) ~ ((i, j, val):xs);
+
+
+cooTraverseList(r, nrows, ncols, ssize, pr, pc) >< coo =>
     QTreeMkNode(r) ~ (rnw, rne, rsw, rse),
-    halfSize << Div(size, 2),
-    xxs ~ ((i, j, val) : xs),
-    xxs ~ Dup4(xxs1, xxs2, xxs3, xxs4),
+    halfSize << Div(ssize, 2),
+    coo ~ Dup4(coo1, coo2, coo3, coo4),
     halfSize ~ Dup3(halfSize1, thalfSize1, thalfSize2),
     thalfSize1 ~ Dup4(halfSize2, halfSize3, halfSize4, halfSize5),
     thalfSize2 ~ Dup4(halfSize6, halfSize7, halfSize8, halfSize9),
+    (nrows, ncols) ~ Dup4((nrows1, ncols1), (nrows2, ncols2), (nrows3, ncols3), (nrows4, ncols4)),
 
     getQuadrantCoords(nwp, nep, swp, sep) ~ (pr, pc, halfSize1),
     nwp ~ (nwpr, nwpc), nep ~ (nepr, nepc), swp ~ (swpr, swpc), sep ~ (sepr, sepc),
@@ -189,34 +219,77 @@ cooTraverseDeconsBoolean(r, pr, pc, size, xs, i, j, val) >< False =>
     (nwpr, nepr, swpr, sepr) ~ Dup((nwpr1, nepr1, swpr1, sepr1), (nwpr2, nepr2, swpr2, sepr2)),
     (nwpc, nepc, swpc, sepc) ~ Dup((nwpc1, nepc1, swpc1, sepc1), (nwpc2, nepc2, swpc2, sepc2)),
 
-    nwCoo << ListFilter((w1, isEntryInCoords(w1, nwpr1, nwpc1, halfSize2)), xxs1),
-    neCoo << ListFilter((w2, isEntryInCoords(w2, nepr1, nepc1, halfSize3)), xxs2),
-    swCoo << ListFilter((w3, isEntryInCoords(w3, swpr1, swpc1, halfSize4)), xxs3),
-    seCoo << ListFilter((w4, isEntryInCoords(w4, sepr1, sepc1, halfSize5)), xxs4),
+    nwCoo << ListFilter((w1, isEntryInCoords(w1, nwpr1, nwpc1, halfSize2)), coo1),
+    neCoo << ListFilter((w2, isEntryInCoords(w2, nepr1, nepc1, halfSize3)), coo2),
+    swCoo << ListFilter((w3, isEntryInCoords(w3, swpr1, swpc1, halfSize4)), coo3),
+    seCoo << ListFilter((w4, isEntryInCoords(w4, sepr1, sepc1, halfSize5)), coo4),
 
-    rnw << cooTraverse(nwpr2, nwpc2, halfSize6, nwCoo),
-    rne << cooTraverse(nepr2, nepc2, halfSize7, neCoo),
-    rsw << cooTraverse(swpr2, swpc2, halfSize8, swCoo),
-    rse << cooTraverse(sepr2, sepc2, halfSize9, seCoo);
+    rnw << cooTraverse(nrows1, ncols1, halfSize6, nwpr2, nwpc2, nwCoo),
+    rne << cooTraverse(nrows2, ncols2, halfSize7, nepr2, nepc2, neCoo),
+    rsw << cooTraverse(nrows3, ncols3, halfSize8, swpr2, swpc2, swCoo),
+    rse << cooTraverse(nrows4, ncols4, halfSize9, sepr2, sepc2, seCoo);
 
-
-cooTraverseDecons(r, pr, pc, size, xs) >< (i, j, val) =>
-  (i, j, pr, pc, size) ~ Dup((i1, j1, pr1, pc1, size1), (i2, j2, pr2, pc2, size2)),
+cooTraverseDecons(r, nrows, ncols, ssize, pr, pc, xs) >< (i, j, val) =>
+  (i, j, pr, pc, ssize) ~ Dup((i1, j1, pr1, pc1, size1), (i2, j2, pr2, pc2, size2)),
   Eq(i_pr) ~ (i1, pr1),
   Eq(j_pc) ~ (j1, pc1),
   Eq(size_1) ~ (size1, 1),
   And3(place) ~ (i_pr, j_pc, size_1),
-  cooTraverseDeconsBoolean(r, pr2, pc2, size2, xs, i2, j2, val) ~ place;
+  cooTraverseDeconsBoolean(r, nrows, ncols, size2, pr2, pc2, xs, i2, j2, val) ~ place;
 
-// Should depend on pr and pc relating to real matrix size
-// and return Leaf(Dummy) || Leaf(UserValue(None))
-cooTraverse(r, int pr, int pc, int size) >< [] =>
-  r ~ QTreeLeaf(0);
+cooTraverseEmptyDummy(r, nrows, ncols, ssize, pr, pc) >< False =>
+  cooTraverseList(r, nrows, ncols, ssize, pr, pc) ~ [];
 
-cooTraverse(r, int pr, int pc, int size) >< x:xs =>
-  cooTraverseDecons(r, pr, pc, size, xs) ~ x;
+cooTraverseEmptyDummy(r, nrows, ncols, ssize, pr, pc) >< True =>
+  r ~ QTreeLeaf(Dummy),
+  Eraser ~ (nrows, ncols, ssize, pr, pc);
 
-FromCoordinateList(r, int size) >< coo =>
-  cooTraverse(r, 0, 0, size) ~ coo;
+cooTraverseEmptyNone(r, nrows, ncols, ssize, pr, pc) >< False =>
+  nrows ~ Dup(nrows1, nrows2),
+  ncols ~ Dup(ncols1, ncols2),
+  (pr, pc) ~ Dup((pr1, pc1), (pr2, pc2)),
+  Leq(nrows_pr) ~ (nrows1, pr1),
+  Leq(ncols_pc) ~ (ncols1, pc1),
+  Or(putDummy) ~ (nrows_pr, ncols_pc),
+  cooTraverseEmptyDummy(r, nrows2, ncols2, ssize, pr2, pc2) ~ putDummy;
 
-// FromCoordinateList END
+cooTraverseEmptyNone(r, nrows, ncols, ssize, pr, pc) >< True =>
+  r ~ QTreeLeaf(UserValue(None)),
+  Eraser ~ (nrows, ncols, ssize, pr, pc);
+
+// Three cases:
+// UserValue(None) in case pr + ssize < nrows && pc + ssize < ncols => cooTraverseEmptyNone
+// Dummy           in case pr >= nrows || pc >= ncols               => cooTraverseEmptyDummy
+// traverse        otherwise                                        => cooTraverseList
+cooTraverse(r, nrows, ncols, ssize, pr, pc) >< [] =>
+  ssize ~ Dup3(ssize1, ssize2, ssize3),
+  pr ~ Dup(pr1, pr2),
+  pc ~ Dup(pc1, pc2),
+  nrows ~ Dup(nrows1, nrows2),
+  ncols ~ Dup(ncols1, ncols2),
+  pr_ssize << Add(pr1, ssize1),
+  pc_ssize << Add(pc1, ssize2),
+  Less(pr_ssize_nrows) ~ (pr_ssize, nrows1),
+  Less(pc_ssize_ncols) ~ (pc_ssize, ncols1),
+
+  And(putNone) ~ (pr_ssize_nrows, pc_ssize_ncols),
+
+  cooTraverseEmptyNone(r, nrows2, ncols2, ssize3, pr2, pc2) ~ putNone;
+
+
+cooTraverse(r, nrows, ncols, ssize, pr, pc) >< x:xs =>
+  cooTraverseDecons(r, nrows, ncols, ssize, pr, pc, xs) ~ x;
+
+// ssize because the aditional complexity of
+// max + closestPowerOf2 is unwanted
+QTreeFromCoordinateList(r) >< (nrows, ncols, ssize, coo) =>
+  // here coo is like QTreeFromCoordinateList analogous
+  // to functions above
+  cooTraverse(r, nrows, ncols, ssize, 0, 0) ~ coo;
+
+// QTreeFromCoordinateList END
+
+
+// SparseMatrix(nrows, nvols, nvals, ssize, tree)
+// Shortened to SM
+// TODO: ...
