@@ -1,2 +1,76 @@
 
-use "./src/linear_algebra.in"
+use "./src/linear_algebra.in";
+
+// bfs_level START
+
+bfs_level_op_add_decons(r, y) >< None =>
+  r ~ y;
+
+bfs_level_op_add_decons(r, y) >< Some(xval) =>
+  r ~ Some(xval),
+  Eraser ~ y;
+
+bfs_level_op_add(r) >< (x, y) =>
+  bfs_level_op_add_decons(r, y) ~ x;
+
+bfs_level_op_mul_decons(r, x) >< Some(yval) =>
+  r ~ x,
+  Eraser ~ yval;
+
+bfs_level_op_mul_decons(r, x) >< None =>
+  r ~ None,
+  Eraser ~ x;
+
+bfs_level_op_mul(r) >< (x, y) =>
+  bfs_level_op_mul_decons(r, x) ~ y;
+
+bfs_level_level_add_decons(r, level, y) >< Some(xval) =>
+  r ~ Some(xval),
+  Eraser ~ (level, y);
+
+bfs_level_level_add_decons_2(r, level) >< Some(yval) =>
+  Eraser ~ yval,
+  r ~ Some(level);
+
+bfs_level_level_add_decons_2(r, level) >< None =>
+  r ~ None,
+  Eraser ~ level;
+
+bfs_level_level_add_decons(r, level, y) >< None =>
+  bfs_level_level_add_decons_2(r, level) ~ y;
+
+bfs_level_level_add(r, level) >< (x, y) =>
+  bfs_level_level_add_decons(r, level, y) ~ x;
+
+bfs_option_map_zero(r) >< None => r ~ None;
+bfs_option_map_zero(r) >< Some(x) => r ~ Some(0), x ~ Eraser;
+
+
+bfs_inner_check_nvals(r, graph, level, visited, nlen, ssize, ftree) >< False =>
+  frontier ~ SparseVector(nlen, -1, ssize, ftree),
+  vxm(new_frontier) ~ (%bfs_level_op_add, %bfs_level_op_mul, frontier, graph1),
+  new_frontier ~ Dup(new_frontier1, new_frontier2),
+  graph ~ Dup(graph1, graph2),
+  level ~ Dup(level1, level2),
+  visited ~ Dup(visited1, visited2),
+  SVMask(frontier_masked) ~ (%isNone, new_frontier1, visited1),
+
+  SVMap2(new_visited) ~ ((w, bfs_level_level_add(w, level1)), visited2, new_frontier2),
+  new_level << Add(level2, 1),
+  bfs_inner(r, graph2) ~ (new_level, frontier_masked, new_visited);
+
+bfs_inner_check_nvals(r, graph, level, visited, nlen, ssize, ftree) >< True =>
+  r ~ visited,
+  Eraser ~ (graph, level, nlen, ssize, ftree);
+
+bfs_inner_frontier_decons(r, graph, level, visited) >< SparseVector(nlen, nvals, ssize, ftree) =>
+  Eq(cond) ~ (0, nvals),
+  bfs_inner_check_nvals(r, graph, level, visited, nlen, ssize, ftree) ~ cond;
+
+bfs_inner(r, graph) >< (level, frontier, visited) =>
+  bfs_inner_frontier_decons(r, graph, level, visited) ~ frontier;
+
+bfs_level(r) >< (graph, startVertices) =>
+  startVertices ~ Dup(s1, s2),
+  SVMap(szeroes) ~ (%bfs_option_map_zero, s1),
+  bfs_inner(r, graph) ~ (1, s2, szeroes);

@@ -1,0 +1,1 @@
+SparseVector(4,4,4,BTreeNode(BTreeNode(BTreeLeaf(UserValue(Some(0))),BTreeLeaf(UserValue(Some(1)))),BTreeNode(BTreeLeaf(UserValue(Some(1))),BTreeLeaf(UserValue(Some(2))))))

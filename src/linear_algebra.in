@@ -1,9 +1,6 @@
 use "./src/matrix.in";
 use "./src/vector.in";
 
-// op_add example:
-// op_add(r) >< (x, y) =>
-//   r << Add(x, y);
 
 // This *function* doesn't check
 // if size is a power of 2
@@ -71,7 +68,7 @@ QTreeDivided(r, op_add, op_mul, size, nw1, ne1, sw1, se1) >< QTreeNode(nw2, ne2,
   top_mul1 ~ Dup4(op_mul1, op_mul2, op_mul3, op_mul4),
   top_mul2 ~ Dup4(op_mul5, op_mul6, op_mul7, op_mul8),
 
-  // Beautiful?
+  // Beautiful
   nw1 ~ Dup(nw1_1, nw1_2),
   ne1 ~ Dup(ne1_1, ne1_2),
   sw1 ~ Dup(sw1_1, sw1_2),
@@ -167,9 +164,16 @@ BTreeQTreeMultiplicationDeconsQLeaf(r, op_add, op_mul, size, qval) >< BTreeNode(
   qval ~ Dup(qval1, qval2),
   op_add ~ Dup(op_add1, op_add2),
   op_mul ~ Dup(op_mul1, op_mul2),
-  BTreeQTreeMultiplicationDeconsQLeaf(rrhs, op_add1, op_mul1, halfSize1, qval1) ~ rhs,
-  BTreeQTreeMultiplicationDeconsQLeaf(rlhs, op_add2, op_mul2, halfSize2, qval2) ~ lhs,
-  BTreeMkNode(r) ~ (rlhs, rrhs);
+  BTreeQTreeMultiplicationDeconsQLeaf(rrhsfull, op_add1, op_mul1, halfSize1, qval1) ~ rhs,
+  BTreeQTreeMultiplicationDeconsQLeaf(rlhsfull, op_add2, op_mul2, halfSize2, qval2) ~ lhs,
+
+  rrhsfull ~ (rrhs, rhsnvals),
+  rlhsfull ~ (rlhs, lhsnvals),
+  nvals << Add(lhsnvals, rhsnvals),
+
+  BTreeMkNode(rtree) ~ (rlhs, rrhs),
+  r ~ (rtree, nvals);
+
 
 BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) >< BTreeLeaf(bval) =>
   bval ~ Dup(bval1, bval2),
@@ -251,3 +255,60 @@ BTreeQTreeMultiplication(r) >< (op_add, op_mul, size, vtree, qtree) =>
 
 
 // BTreeQTreeMultiplication (vxm predecessor) END
+
+// vxm BEGIN
+
+vxm_cond_1(r, op_add, op_mul, new_len, vssize, qssize, vtree, qtree) >< True =>
+  // shrink/expand if needed
+  // omitted for now
+  Eraser ~ (),
+  BTreeQTreeMultiplication(rtreefull) ~ (op_add, op_mul, qssize, vtree, qtree),
+  rtreefull ~ (rtree, nvals),
+  r ~ SparseVector(new_len, nvals, vssize, rtree);
+
+vxm_cond_1(r, op_add, op_mul, new_len, vssize, qssize, vtree, qtree) >< False =>
+  Eraser ~ (op_add, op_mul, new_len, vssize, qssize, vtree, qtree),
+  r ~ ERROR_InconsistentStructureOfStorages;
+
+vxm_2(r, op_add, op_mul, qnrows, qncols, qnvals, qssize, qtree) >< SparseVector(vnlen, vnvals, vssize, vtree) =>
+  // Conditions:
+  // vnlen == qnrows
+  // vssize == qssize (shrink/expand otherwise)
+  Eq(eq_cond) ~ (vnlen, qnrows),
+  Eraser ~ (vnvals, qnvals), // nvals not needed
+  vxm_cond_1(r, op_add, op_mul, qncols, vssize, qssize, vtree, qtree) ~ eq_cond;
+
+vxm_1(r, op_add, op_mul, vector) >< SparseMatrix(nrows, ncols, nvals, ssize, qtree) =>
+  vxm_2(r, op_add, op_mul, nrows, ncols, nvals, ssize, qtree) ~ vector;
+
+vxm(r) >< (op_add, op_mul, vector, matrix) =>
+  r << vxm_1(op_add, op_mul, vector, matrix);
+
+// vxm END
+
+// mxm BEGIN
+
+mxm_cond_1(r, op_add, op_mul, nrows, ncols, ssize1, ssize2, qtree1, qtree2) >< True =>
+  // Check ssize1 == ssize2 and expand if needed
+  // omitted for now
+  QTreeMultiplication(rtreefull) ~ (op_add, op_mul, ssize1, qtree1, qtree2),
+  rtreefull ~ (rtree, nvals),
+  r ~ SparseMatrix(nrows, ncols, nvals, ssize2, rtree);
+
+mxm_cond_1(r, op_add, op_mul, nrows, ncols, ssize1, ssize2, qtree1, qtree2) >< False =>
+  r ~ ERROR_InconsistentStructureOfStorages,
+  Eraser ~ (op_add, op_mul, nrows, ncols, ssize1, ssize2, qtree1, qtree2);
+
+mxm_2(r, op_add, op_mul, nrows2, ncols2, ssize2, qtree2) >< SparseMatrix(nrows1, ncols1, nvals1, ssize1, qtree1) =>
+  Eraser ~ nvals1,
+  Eq(eq_cond) ~ (ncols1, nrows2),
+  mxm_cond_1(r, op_add, op_mul, nrows1, ncols2, ssize1, ssize2, qtree1, qtree2) ~ eq_cond;
+
+mxm_1(r, op_add, op_mul, m1) >< SparseMatrix(nrows2, ncols2, nvals2, ssize2, qtree2) =>
+  Eraser ~ nvals2,
+  mxm_2(r, op_add, op_mul, nrows2, ncols2, ssize2, qtree2) ~ m1;
+
+mxm(r) >< (op_add, op_mul, m1, m2) =>
+  r << mxm_1(op_add, op_mul, m1, m2);
+
+// mxm END

@@ -1,5 +1,5 @@
-// BTreeLeaf(UserValue(val)) | BTreeLeaf(Dummy)
 // BTreeNode(lhs, rhs)
+// BTreeLeaf(UserValue(val)) | BTreeLeaf(Dummy)
 
 use "./src/equalities.in";
 
@@ -136,6 +136,57 @@ BTreeMap2(r) >< (f, ssize, tree_1, tree_2) =>
 
 // BTreeMap2 END
 
+// BTreeMap START
+
+BTreeMapDeconsValue(r, f, ssize) >< UserValue(val) =>
+  f ~ (w, val),
+  w ~ Dup(w1, w2),
+  BTreeGetNvals(nvals) ~ (ssize, w1),
+  r ~ (BTreeLeaf(UserValue(w2)), nvals);
+
+BTreeMapDeconsValue(r, f, ssize) >< Dummy =>
+  r ~ (BTreeLeaf(Dummy), 0),
+  Eraser ~ (f, ssize);
+
+BTreeMapDecons(r, f, ssize) >< BTreeLeaf(val) =>
+  BTreeMapDeconsValue(r, f, ssize) ~ val;
+
+BTreeMapDecons(r, f, ssize) >< BTreeNode(lhs, rhs) =>
+  f ~ Dup(f1, f2),
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup(halfSize1, halfSize2),
+  BTreeMap(rlhsfull) ~ (f1, halfSize1, lhs),
+  BTreeMap(rrhsfull) ~ (f2, halfSize2, rhs),
+  rlhsfull ~ (rlhs, lhsnvals),
+  rrhsfull ~ (rrhs, rhsnvals),
+  nvals << Add(lhsnvals, rhsnvals),
+  BTreeMkNode(rtree) ~ (rlhs, rrhs),
+  r ~ (rtree, nvals);
+
+
+BTreeMap(r) >< (f, ssize, tree) =>
+  BTreeMapDecons(r, f, ssize) ~ tree;
+
+// BTreeMap END
+
+// BTreeMask START
+
+btree_mask_f_conditional_decons(r, v1) >< False =>
+  r ~ None,
+  v1 ~ Eraser;
+
+btree_mask_f_conditional_decons(r, v1) >< True =>
+  r ~ v1;
+
+btree_mask_f_conditional(r, f) >< (v1, v2) =>
+  f ~ (w, v2),
+  btree_mask_f_conditional_decons(r, v1) ~ w;
+
+BTreeMask(r) >< (f, ssize, tree1, tree2) =>
+  BTreeMap2(r) ~ ((w, btree_mask_f_conditional(w, f)), ssize, tree1, tree2);
+
+// BTreeMask END
+
 // SparseVector(length, nvals, ssize, tree)
 // Shortened to SV
 
@@ -162,3 +213,24 @@ SVMap2Decons_1(r, f, sv1) >< SparseVector(len2, nvals2, ssize2, tree2) =>
   SVMap2Decons_2(r, f, len2, ssize2, tree2) ~ sv1;
 
 SVMap2(r) >< (f, sv1, sv2) => SVMap2Decons_1(r, f, sv1) ~ sv2;
+
+// SVMap START
+
+SVMapDecons(r, f) >< SparseVector(nlen, nvals, ssize, tree) =>
+  ssize ~ Dup(ssize1, ssize2),
+  BTreeMap(w) ~ (f, ssize1, tree),
+  w ~ (rtree, rnvals),
+  Eraser ~ (nvals),
+  r ~ SparseVector(nlen, rnvals, ssize2, rtree);
+
+SVMap(r) >< (f, vector) =>
+  SVMapDecons(r, f) ~ vector;
+
+// SVMap END
+
+// SVMask START
+
+SVMask(r) >< (f, vector1, vector2) =>
+  SVMap2(r) ~ ((w, btree_mask_f_conditional(w, f)), vector1, vector2);
+
+// SVMask END

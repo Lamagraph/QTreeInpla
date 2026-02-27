@@ -1,6 +1,5 @@
 // QTreeNode(nw,ne,sw,se);
 // QTreeLeaf(UserValue(val)) | QTreeLeaf(Dummy)
-// TODO: rewrite assuming QTrees use None/Some(x)
 
 use "./src/equalities.in";
 use "./src/lists.in";
@@ -60,7 +59,7 @@ QTreeMkNode(r) >< (nw, ne, sw, se) =>
   qtreemkNode_1(r, nw2, ne2, sw2, se2) ~ areEqual;
 
 
-// Map2 start
+// QTreeMap2 START
 
 QTreeGetNvalsDecons(r, ssize) >< None =>
   r ~ 0,
@@ -156,10 +155,10 @@ QTreeMap2Decons(r, f, ssize, tree1) >< QTreeNode(nw2, ne2, sw2, se2) =>
 QTreeMap2(r) >< (f, ssize, tree1, tree2) =>
   QTreeMap2Decons(r, f, ssize, tree1) ~ tree2;
 
-// Map2 end
+// QTreeMap2 END
 
 
-// Coordinate list START
+// QTreeFromCoordinateList START
 
 getQuadrantCoords(nwp, nep, swp, sep) >< (int pr, int pc, int halfSize) =>
   (pr, pc) ~ Dup4((pr1, pc1), (pr2, pc2), (pr3, pc3), (pr4, pc4)),
@@ -205,29 +204,29 @@ cooTraverseDeconsBoolean(r, nrows, ncols, ssize, pr, pc, xs, i, j, val) >< False
 
 
 cooTraverseList(r, nrows, ncols, ssize, pr, pc) >< coo =>
-    QTreeMkNode(r) ~ (rnw, rne, rsw, rse),
-    halfSize << Div(ssize, 2),
-    coo ~ Dup4(coo1, coo2, coo3, coo4),
-    halfSize ~ Dup3(halfSize1, thalfSize1, thalfSize2),
-    thalfSize1 ~ Dup4(halfSize2, halfSize3, halfSize4, halfSize5),
-    thalfSize2 ~ Dup4(halfSize6, halfSize7, halfSize8, halfSize9),
-    (nrows, ncols) ~ Dup4((nrows1, ncols1), (nrows2, ncols2), (nrows3, ncols3), (nrows4, ncols4)),
+  QTreeMkNode(r) ~ (rnw, rne, rsw, rse),
+  halfSize << Div(ssize, 2),
+  coo ~ Dup4(coo1, coo2, coo3, coo4),
+  halfSize ~ Dup3(halfSize1, thalfSize1, thalfSize2),
+  thalfSize1 ~ Dup4(halfSize2, halfSize3, halfSize4, halfSize5),
+  thalfSize2 ~ Dup4(halfSize6, halfSize7, halfSize8, halfSize9),
+  (nrows, ncols) ~ Dup4((nrows1, ncols1), (nrows2, ncols2), (nrows3, ncols3), (nrows4, ncols4)),
 
-    getQuadrantCoords(nwp, nep, swp, sep) ~ (pr, pc, halfSize1),
-    nwp ~ (nwpr, nwpc), nep ~ (nepr, nepc), swp ~ (swpr, swpc), sep ~ (sepr, sepc),
+  getQuadrantCoords(nwp, nep, swp, sep) ~ (pr, pc, halfSize1),
+  nwp ~ (nwpr, nwpc), nep ~ (nepr, nepc), swp ~ (swpr, swpc), sep ~ (sepr, sepc),
 
-    (nwpr, nepr, swpr, sepr) ~ Dup((nwpr1, nepr1, swpr1, sepr1), (nwpr2, nepr2, swpr2, sepr2)),
-    (nwpc, nepc, swpc, sepc) ~ Dup((nwpc1, nepc1, swpc1, sepc1), (nwpc2, nepc2, swpc2, sepc2)),
+  (nwpr, nepr, swpr, sepr) ~ Dup((nwpr1, nepr1, swpr1, sepr1), (nwpr2, nepr2, swpr2, sepr2)),
+  (nwpc, nepc, swpc, sepc) ~ Dup((nwpc1, nepc1, swpc1, sepc1), (nwpc2, nepc2, swpc2, sepc2)),
 
-    nwCoo << ListFilter((w1, isEntryInCoords(w1, nwpr1, nwpc1, halfSize2)), coo1),
-    neCoo << ListFilter((w2, isEntryInCoords(w2, nepr1, nepc1, halfSize3)), coo2),
-    swCoo << ListFilter((w3, isEntryInCoords(w3, swpr1, swpc1, halfSize4)), coo3),
-    seCoo << ListFilter((w4, isEntryInCoords(w4, sepr1, sepc1, halfSize5)), coo4),
+  nwCoo << ListFilter((w1, isEntryInCoords(w1, nwpr1, nwpc1, halfSize2)), coo1),
+  neCoo << ListFilter((w2, isEntryInCoords(w2, nepr1, nepc1, halfSize3)), coo2),
+  swCoo << ListFilter((w3, isEntryInCoords(w3, swpr1, swpc1, halfSize4)), coo3),
+  seCoo << ListFilter((w4, isEntryInCoords(w4, sepr1, sepc1, halfSize5)), coo4),
 
-    rnw << cooTraverse(nrows1, ncols1, halfSize6, nwpr2, nwpc2, nwCoo),
-    rne << cooTraverse(nrows2, ncols2, halfSize7, nepr2, nepc2, neCoo),
-    rsw << cooTraverse(nrows3, ncols3, halfSize8, swpr2, swpc2, swCoo),
-    rse << cooTraverse(nrows4, ncols4, halfSize9, sepr2, sepc2, seCoo);
+  rnw << cooTraverse(nrows1, ncols1, halfSize6, nwpr2, nwpc2, nwCoo),
+  rne << cooTraverse(nrows2, ncols2, halfSize7, nepr2, nepc2, neCoo),
+  rsw << cooTraverse(nrows3, ncols3, halfSize8, swpr2, swpc2, swCoo),
+  rse << cooTraverse(nrows4, ncols4, halfSize9, sepr2, sepc2, seCoo);
 
 cooTraverseDecons(r, nrows, ncols, ssize, pr, pc, xs) >< (i, j, val) =>
   (i, j, pr, pc, ssize) ~ Dup((i1, j1, pr1, pc1, size1), (i2, j2, pr2, pc2, size2)),
@@ -292,4 +291,4 @@ QTreeFromCoordinateList(r) >< (nrows, ncols, ssize, coo) =>
 
 // SparseMatrix(nrows, nvols, nvals, ssize, tree)
 // Shortened to SM
-// TODO: ...
+// TODO: Wrap QTree functions for SparseMatrix interface
