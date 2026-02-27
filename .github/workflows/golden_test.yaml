@@ -40,7 +40,7 @@ jobs:
       - name: Clone patched Inpla
         uses: actions/checkout@v6
         with:
-          repository: Danil-Zaripov/inpla
+          repository: Lamagraph/inpla
           path: inpla
 
       - name: Compile Inpla
