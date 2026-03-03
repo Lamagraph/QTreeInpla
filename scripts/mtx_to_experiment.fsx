@@ -147,7 +147,8 @@ let experimentsPath = "./experiments/"
 
 let getBigCoo (linewords: string array array) =
     linewords
-    |> Array.map (fun x -> sprintf "(%s, %s, 1)" x.[0] x.[1])
+    |> Array.map (fun x -> ((int x.[0]) - 1), ((int x.[1]) - 1))
+    |> Array.map (fun (i, j) -> sprintf "(%d, %d, 1), (%d, %d, 1)" i j j i)
     |> String.concat ", "
     |> sprintf "[%s]"
 
@@ -161,7 +162,7 @@ coo ~ %s;
 const SSIZE=%d;
 const LENGTH=%d;
 SMFromCoordinateList(graph) ~ (LENGTH, LENGTH, SSIZE, coo);
-vcoo ~ [(1, 1)];
+vcoo ~ [(0, 1)];
 SVFromCoordinateList(startVertices) ~ (LENGTH, SSIZE, vcoo);
 bfs_level(r) ~ (graph, startVertices);
 r; free r;
@@ -171,7 +172,7 @@ r; free r;
 
 let handleFile path =
     let lines = File.ReadLines(path) |> Seq.toArray
-    let removedComments = 
+    let removedComments =
       lines |> Array.skipWhile (fun s -> s.[0] = '%')
     let linewords = removedComments |> Array.map (fun s -> s.Split " ")
     let first = linewords.[0]
