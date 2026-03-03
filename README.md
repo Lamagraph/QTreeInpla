@@ -2,6 +2,16 @@
 
 QuadTree linear algebra implementation in Inpla.
 
+# How to run experiments
+
+* Inpla uses recursion on AST creation, hence use `ulimit -s unlimited` to have unlimited stack
+
+* Use [Lamagraph/inpla](https://github.com/Lamagraph/inpla)'s `experiments` branch for more interpreter memory
+
+* Use `scripts/mtx_to_coo.fsx` to create coo list from SuiteSparse matrix collection mtx matrix
+
+* Be patient. The main bottleneck is loading a large coordinate list
+
 # How to run golden tests
 
 Ensure dotnet is installed.
