@@ -10,7 +10,8 @@ let cooExtension = ".coo"
 
 let getBigCoo (linewords: string array array) =
     linewords
-    |> Array.map (fun x -> sprintf "(%s, %s, 1)" x.[0] x.[1])
+    |> Array.map (fun x -> ((int x.[0]) - 1), ((int x.[1]) - 1))
+    |> Array.map (fun (i, j) -> sprintf "(%d, %d, 1), (%d, %d, 1)" i j j i)
     |> String.concat ", "
     |> sprintf "[%s]"
 
