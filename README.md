@@ -8,7 +8,7 @@ QuadTree linear algebra implementation in Inpla.
 
 * Use [Lamagraph/inpla](https://github.com/Lamagraph/inpla)'s `experiments` branch for more interpreter memory
 
-* Use `scripts/mtx_to_coo.fsx` to create coo list from SuiteSparse matrix collection mtx matrix
+* Use `scripts/mtx_to_experiment.fsx` to create inpla script ready to be run
 
 * Be patient. The main bottleneck is loading a large coordinate list
 
