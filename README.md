@@ -4,13 +4,18 @@ QuadTree linear algebra implementation in Inpla.
 
 # How to run experiments
 
-* Inpla uses recursion on AST creation, hence use `ulimit -s unlimited` to have unlimited stack
+* Make threaded patched Inpla:
+```sh
+git clone https://github.com/Lamagraph/inpla.git -b experiments
 
-* Use [Lamagraph/inpla](https://github.com/Lamagraph/inpla)'s `experiments` branch for more interpreter memory
+# Compile single-threaded version first (bug in vanilla Inpla):
 
-* Use `scripts/mtx_to_experiment.fsx` to create inpla script ready to be run
+make -C inpla && make -C inpla clean && make -C inpla thread
+```
 
-* Be patient. The main bottleneck is loading a large coordinate list
+* Run `./scripts/run_experiments.sh $PATH_TO_INPLA $MAX_THREADS` to run all experiments in `./experiments/` directory and collect the results OR run experiments yourself: `./inpla/inpla -f ./experiments/bcspwr10.in -t 4 > ./experiments/my_4threaded_result.txt`
+
+* Download mtx matrices from SuiteSparse matrix collection and convert them to experiments using `./scripts/mtx_to_experiment.fsx $PATH_TO_MTX_MATRIX`
 
 # How to run golden tests
 

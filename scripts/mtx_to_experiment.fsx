@@ -165,7 +165,7 @@ SMFromCoordinateList(graph) ~ (LENGTH, LENGTH, SSIZE, coo);
 vcoo ~ [(0, 1)];
 SVFromCoordinateList(startVertices) ~ (LENGTH, SSIZE, vcoo);
 bfs_level(r) ~ (graph, startVertices);
-r; free r;
+// To see the result: r; free r;
 "
     coo ssize nrows
 
