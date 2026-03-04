@@ -27,7 +27,7 @@ for EXPERIMENT in ./experiments/*.in; do
   THREADS=1
 
   while [ "$THREADS" -le "$MAX_THREADS" ]; do
-    echo "  -> Running with $THREADS threads"
+    echo "  -> Running with $THREADS thread(s)"
     "$INPLA_PATH" -f "$EXPERIMENT" -t "$THREADS" >"$RESULTS_DIR/threads${THREADS}.output"
 
     THREADS=$((THREADS * 2))

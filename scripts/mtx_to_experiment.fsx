@@ -153,9 +153,10 @@ let getBigCoo (linewords: string array array) =
     |> sprintf "[%s]"
 
 let getExperiment nrows coo =
-  let ssize = int <| getNearestUpperPowerOfTwo (uint64 nrows)
-  sprintf
-    @"use ""./src/bfs.in"";
+    let ssize = int <| getNearestUpperPowerOfTwo (uint64 nrows)
+
+    sprintf
+        @"use ""./src/bfs.in"";
 
 coo ~ %s;
 
@@ -167,25 +168,27 @@ SVFromCoordinateList(startVertices) ~ (LENGTH, SSIZE, vcoo);
 bfs_level(r) ~ (graph, startVertices);
 // To see the result: r; free r;
 "
-    coo ssize nrows
+        coo
+        ssize
+        nrows
 
 
 let handleFile path =
     let lines = File.ReadLines(path) |> Seq.toArray
-    let removedComments =
-      lines |> Array.skipWhile (fun s -> s.[0] = '%')
+    let removedComments = lines |> Array.skipWhile (fun s -> s.[0] = '%')
     let linewords = removedComments |> Array.map (fun s -> s.Split " ")
     let first = linewords.[0]
 
-    let nrows, ncols, nnz =
-        int first.[0], int first.[1], int first.[2]
+    let nrows, ncols, nnz = int first.[0], int first.[1], int first.[2]
 
     let tl = Array.skip 1 linewords
-    let newFilePath = Path.Combine(experimentsPath, (Path.GetFileNameWithoutExtension path) + inplaExtension)
+
+    let newFilePath =
+        Path.Combine(experimentsPath, (Path.GetFileNameWithoutExtension path) + inplaExtension)
     // let newFilePath = Path.ChangeExtension(path, inplaExtension)
     let experiment = getExperiment nrows (getBigCoo tl)
     File.WriteAllText(newFilePath, experiment)
-    printfn "Written to %s" newFilePath
+    printfn "Written to %s %d elements" newFilePath ((linewords.Length - 1) * 2)
     ()
 
 

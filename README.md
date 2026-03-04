@@ -13,7 +13,9 @@ git clone https://github.com/Lamagraph/inpla.git -b experiments
 make -C inpla && make -C inpla clean && make -C inpla thread
 ```
 
-* Run `./scripts/run_experiments.sh $PATH_TO_INPLA $MAX_THREADS` to run all experiments in `./experiments/` directory and collect the results OR run experiments yourself: `./inpla/inpla -f ./experiments/bcspwr10.in -t 4 > ./experiments/my_4threaded_result.txt`
+* Run `./scripts/run_experiments.sh $PATH_TO_INPLA $MAX_THREADS` to run all experiments in `./experiments/` directory and collect the results OR run the experiments yourself: `./inpla/inpla -f ./experiments/bcspwr10.in -t 4 > ./experiments/my_4threaded_result.txt`
+
+* After `./scripts/run_experiments.sh` you can `./scripts/results_to_data.fsx` to extract data on bfs time and conversion time ready to be plotted
 
 * Download mtx matrices from SuiteSparse matrix collection and convert them to experiments using `./scripts/mtx_to_experiment.fsx $PATH_TO_MTX_MATRIX`
 
