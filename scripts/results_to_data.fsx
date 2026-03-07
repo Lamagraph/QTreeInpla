@@ -60,6 +60,8 @@ let main args =
 
     for (name, bfsData, convertationData) in data do
         printfn "Successfully processed %s data" name
+        let bfsData = sprintf "%s\n%s" name bfsData
+        let convertationData = sprintf "%s\n%s" name convertationData
         let name = name + ".data"
         File.WriteAllText(bfsPath + name, bfsData)
         File.WriteAllText(convertationPath + name, convertationData)
