@@ -4,7 +4,7 @@ QuadTree linear algebra implementation in Inpla.
 
 # How to run experiments
 
-* Make threaded patched Inpla:
+* Make threaded patched Inpla from `experiments` branch:
 ```sh
 git clone https://github.com/Lamagraph/inpla.git -b experiments
 
@@ -12,6 +12,8 @@ git clone https://github.com/Lamagraph/inpla.git -b experiments
 
 make -C inpla && make -C inpla clean && make -C inpla thread
 ```
+
+* Use `ulimit -s unlimited` for unlimited stack
 
 * Run `./scripts/run_experiments.sh $PATH_TO_INPLA $MAX_THREADS` to run all experiments in `./experiments/` directory and collect the results OR run the experiments yourself: `./inpla/inpla -f ./experiments/bcspwr10.in -t 4 > ./experiments/my_4threaded_result.txt`
 
