@@ -45,3 +45,7 @@ tree2 ~ BTreeNode(
 BTreeMap2(r) ~ (%op_add, 8, tree1, tree2);
 // 1213N3DD
 r; free tree1 tree2 r;
+
+coo ~ [ (0, 1), (1, 1) ];
+SVFromCoordinateList(r) ~ (7, 8, coo);
+r; free coo r;

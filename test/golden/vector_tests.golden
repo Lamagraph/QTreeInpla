@@ -1,1 +1,2 @@
 (BTreeNode(BTreeNode(BTreeNode(BTreeLeaf(UserValue(Some(1))),BTreeLeaf(UserValue(Some(2)))),BTreeNode(BTreeLeaf(UserValue(Some(1))),BTreeLeaf(UserValue(Some(3))))),BTreeNode(BTreeNode(BTreeLeaf(UserValue(None)),BTreeLeaf(UserValue(Some(3)))),BTreeLeaf(Dummy))),5)
+SparseVector(7,2,8,BTreeNode(BTreeNode(BTreeLeaf(UserValue(Some(1))),BTreeLeaf(UserValue(None))),BTreeNode(BTreeLeaf(UserValue(None)),BTreeNode(BTreeLeaf(UserValue(None)),BTreeLeaf(Dummy)))))

@@ -291,4 +291,16 @@ QTreeFromCoordinateList(r) >< (nrows, ncols, ssize, coo) =>
 
 // SparseMatrix(nrows, nvols, nvals, ssize, tree)
 // Shortened to SM
-// TODO: Wrap QTree functions for SparseMatrix interface
+
+// SMFromCoordinateList
+
+SMFromCoordinateList(r) >< (nrows, ncols, ssize, coo) =>
+  coo ~ Dup(coo1, coo2),
+  ListLength(nvals) ~ coo1,
+  nrows ~ Dup(nrows1, nrows2),
+  ncols ~ Dup(ncols1, ncols2),
+  ssize ~ Dup(ssize1, ssize2),
+
+  QTreeFromCoordinateList(qtree) ~ (nrows1, ncols1, ssize1, coo2),
+
+  r ~ SparseMatrix(nrows2, ncols2, nvals, ssize2, qtree);

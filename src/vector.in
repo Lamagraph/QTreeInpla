@@ -2,7 +2,7 @@
 // BTreeLeaf(UserValue(val)) | BTreeLeaf(Dummy)
 
 use "./src/equalities.in";
-
+use "./src/lists.in";
 
 // BTreeMkNode START
 
@@ -187,6 +187,98 @@ BTreeMask(r) >< (f, ssize, tree1, tree2) =>
 
 // BTreeMask END
 
+// BTreeFromCoordinateList BEGIN
+
+// cooEntry: (idx, val)
+
+visEntryInCoords(r, p, ssize) >< (idx, val) =>
+  p ~ Dup(p1, p2),
+  idx ~ Dup(idx1, idx2),
+  p_size << Add(p1, ssize),
+  // p <= idx && idx < p_size
+  Less(idx_p_size) ~ (idx1, p_size),
+  Leq(p_idx) ~ (p2, idx2),
+  Eraser ~ val,
+  And(r) ~ (idx_p_size, p_idx);
+
+vcooTraversePutValue(r, nlen, ssize, p, xs, idx, val) >< False =>
+  vcooTraverseList(r, nlen, ssize, p) ~ (idx, val):xs;
+
+vcooTraversePutValue(r, nlen, ssize, p, xs, idx, val) >< True =>
+  r ~ BTreeLeaf(UserValue(Some(val))),
+  Eraser ~ (nlen, ssize, p, xs, idx);
+
+vcooTraverseValueCheck(r, nlen, ssize, p, xs) >< (idx, val) =>
+  p ~ Dup(p1, p2),
+  ssize ~ Dup(ssize1, ssize2),
+  idx ~ Dup(idx1, idx2),
+  Eq(ssize_1) ~ (ssize1, 1),
+  Eq(p_idx) ~ (p1, idx1),
+  And(putValue) ~ (ssize_1, p_idx),
+  vcooTraversePutValue(r, nlen, ssize2, p2, xs, idx2, val) ~ putValue;
+
+vcooTraverse(r, nlen, ssize, p) >< x:xs =>
+  vcooTraverseValueCheck(r, nlen, ssize, p, xs) ~ x;
+
+
+vcooTraverseList(r, nlen, ssize, p) >< coo =>
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup(thalfSize1, thalfSize2),
+  thalfSize1 ~ Dup(thalfSize3, halfSize5),
+  thalfSize2 ~ Dup(halfSize1, halfSize2),
+  thalfSize3 ~ Dup(halfSize3, halfSize4),
+  coo ~ Dup(coo1, coo2),
+  p ~ Dup(lhsp, p2),
+  rhsp << Add(p2, halfSize5),
+
+  lhsp ~ Dup(lhsp1, lhsp2),
+  rhsp ~ Dup(rhsp1, rhsp2),
+
+  lhsCoo << ListFilter((w1, visEntryInCoords(w1, lhsp1, halfSize1)), coo1),
+  rhsCoo << ListFilter((w2, visEntryInCoords(w2, rhsp1, halfSize2)), coo2),
+
+  nlen ~ Dup(nlen1, nlen2),
+
+  rlhs << vcooTraverse(nlen1, halfSize3, lhsp2, lhsCoo),
+  rrhs << vcooTraverse(nlen2, halfSize4, rhsp2, rhsCoo),
+
+  BTreeMkNode(r) ~ (rlhs, rrhs);
+
+vcooTraverseEmptyDummy(r, nlen, ssize, p) >< False =>
+  vcooTraverseList(r, nlen, ssize, p) ~ [];
+
+vcooTraverseEmptyDummy(r, nlen, ssize, p) >< True =>
+  r ~ BTreeLeaf(Dummy),
+  Eraser ~ (nlen, ssize, p);
+
+vcooTraverseEmptyNone(r, nlen, ssize, p) >< False =>
+  nlen ~ Dup(nlen1, nlen2),
+  p ~ Dup(p1, p2),
+  Leq(putDummy) ~ (nlen1, p1),
+  vcooTraverseEmptyDummy(r,  nlen2, ssize, p2) ~ putDummy;
+
+
+vcooTraverseEmptyNone(r, nlen, ssize, p) >< True =>
+  r ~ BTreeLeaf(UserValue(None)),
+  Eraser ~ (nlen, ssize, p);
+
+// Three cases:
+// UserValue(None) in case p + ssize < nlen
+// Dummy           in case p >= nlen
+// traverse        otherwise
+vcooTraverse(r, nlen, ssize, p) >< [] =>
+  p ~ Dup(p1, p2),
+  ssize ~ Dup(ssize1, ssize2),
+  nlen ~ Dup(nlen1, nlen2),
+  p_size << Add(p1, ssize1),
+  Less(putNone) ~ (p_size, nlen1),
+  vcooTraverseEmptyNone(r, nlen2, ssize2, p2) ~ putNone;
+
+BTreeFromCoordinateList(r) >< (nlen, ssize, coo) =>
+  vcooTraverse(r, nlen, ssize, 0) ~ coo;
+
+// BTreeFromCoordinateList END
+
 // SparseVector(length, nvals, ssize, tree)
 // Shortened to SV
 
@@ -234,3 +326,15 @@ SVMask(r) >< (f, vector1, vector2) =>
   SVMap2(r) ~ ((w, btree_mask_f_conditional(w, f)), vector1, vector2);
 
 // SVMask END
+
+// SVFromCoordinateList BEGIN
+
+SVFromCoordinateList(r) >< (nlen, ssize, coo) =>
+  coo ~ Dup(coo1, coo2),
+  nlen ~ Dup(nlen1, nlen2),
+  ssize ~ Dup(ssize1, ssize2),
+  ListLength(nvals) ~ coo1,
+  BTreeFromCoordinateList(btree) ~ (nlen1, ssize1, coo2),
+  r ~ SparseVector(nlen2, nvals, ssize2, btree);
+
+// SVFromCoordinateList END

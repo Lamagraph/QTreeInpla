@@ -12,3 +12,10 @@ ListFilter(r, predicate) >< x:xs =>
   predicate ~ Dup(predicate1, predicate2),
   predicate1 ~ (isTrue, x1),
   filterAppliedPredicate(r, predicate2, x2, xs) ~ isTrue;
+
+
+ListLength(r) >< [] => r ~ 0;
+ListLength(r) >< x:xs =>
+  x ~ Eraser,
+  ListLength(w) ~ xs,
+  r << Add(w, 1);
