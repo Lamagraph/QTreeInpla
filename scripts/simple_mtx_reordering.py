@@ -4,6 +4,14 @@ import scipy.io
 import sys
 import argparse
 import warnings
+import os
+
+def get_output(output, input):
+    if output == None:
+        name, ext = os.path.splitext(input)
+        return name + '_reordered' + ext
+    else:
+        return output
 
 def reorder_rcm(A):
     """
@@ -60,7 +68,7 @@ def main():
         description='Переупорядочивание разреженной матрицы из файла Matrix Market и сохранение результата.'
     )
     parser.add_argument('input', help='Входной файл .mtx')
-    parser.add_argument('output', help='Выходной файл .mtx для переупорядоченной матрицы')
+    parser.add_argument('--output', help='Выходной файл .mtx для переупорядоченной матрицы', required=False)
     parser.add_argument('--method', choices=['rcm', 'spectral'], default='rcm',
                         help='Метод переупорядочивания: rcm (обратный Катхилла-Макки) или spectral (спектральная кластеризация)')
     parser.add_argument('--perm-output', help='Опциональный файл для сохранения вектора перестановки (текст или .npy)')
@@ -105,9 +113,10 @@ def main():
         A_reordered = A[perm, :]
 
     # Сохранение результата
-    print(f"Запись переупорядоченной матрицы в {args.output}...")
+    output = get_output(args.output, args.input)
+    print(f"Запись переупорядоченной матрицы в {output}...")
     try:
-        scipy.io.mmwrite(args.output, A_reordered,
+        scipy.io.mmwrite(output, A_reordered,
                          comment=f'Reordered with method={args.method}')
     except Exception as e:
         print(f"Ошибка записи: {e}")
