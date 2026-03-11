@@ -2,6 +2,33 @@
 
 QuadTree linear algebra implementation in Inpla.
 
+# How to preprocess graphs
+
+Structured matrices should better fit to quad-trees. 
+
+You can use `./scripts/simple_mtx_reordering.py` to reorder matrices stored in `mtx` files.
+
+```bash
+python reorder_mtx.py input.mtx output.mtx --method rcm
+```
+
+For visual control of reordering you can use `./scripts/draw_mtx_sparsity.py`
+
+```bash
+python spy_mtx.py original.mtx original_spy.png --title "Original Matrix"
+```
+
+## Examples of reordering
+
+| Original | Reordered |
+| :--- | :--- |
+| webbase-1M.mtx |
+| ![Original webbase-1M](experiments/figures/original_webbase.png) | ![Reordered webbase-1M](experiments/figures/reordered_webbase.png) |
+| coAuthorsCiteseer.mtx |
+| ![Original coAuthorsCiteseer](experiments/figures/original_coAuthors.png) | ![Reordered coAuthorsCiteseer](experiments/figures/reordered_coAuthors.png) |
+| arc130.mtx |
+| ![Original arc130](experiments/figures/original_arc_130.png) | ![Reordered arc130](experiments/figures/reordered_arc_130.png) |
+
 # How to run experiments
 
 * Make threaded patched Inpla from `experiments` branch:
