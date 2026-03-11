@@ -1,6 +1,7 @@
 #!/usr/bin/env -S dotnet fsi
 
-// mtx to Inpla experiment script assuming the matrix only contains lower half (or upper half) elements
+// mtx to Inpla experiment script which does not duplicate elements
+// assuming mtx matrix only containts lower half elements
 
 #load "./get_coo.fsx"
 
@@ -182,9 +183,9 @@ let handleFile path =
     let newFilePath =
         Path.Combine(experimentsPath, (Path.GetFileNameWithoutExtension path) + inplaExtension)
     // let newFilePath = Path.ChangeExtension(path, inplaExtension)
-    let experiment = getExperiment nrows (getBigCooDuplicate tl)
+    let experiment = getExperiment nrows (getBigCoo tl)
     File.WriteAllText(newFilePath, experiment)
-    printfn "Written to %s %d elements" newFilePath (tl.Length * 2)
+    printfn "Written to %s %d elements" newFilePath tl.Length
     ()
 
 
