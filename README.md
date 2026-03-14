@@ -56,3 +56,46 @@ Ensure dotnet is installed.
 2. Compile to obtain Inpla executable
 3. Make sure you are in the project directory (Inpla's `use` directives are relative to current working directory)
 4. `dotnet fsi test.fsx -- $PATH_TO_INPLA_EXECUTABLE` or simply `./test.fsx $PATH_TO_INPLA_EXECUTABLE`
+
+# LAGraph Benchmarks
+
+To compare with LAGraph (GraphBLAS implementation), you need to compile the benchmark:
+
+## Compile LAGraph benchmark
+
+```bash
+gcc -I/usr/local/include -I/usr/local/include/suitesparse lagraph_bfs.c -o lagraph_bfs \
+    -L/usr/local/lib -llagraph -llagraphx -lgraphblas -lm -Wl,-rpath,/usr/local/lib
+```
+
+Note: Requires LAGraph and GraphBLAS installed in `/usr/local/`.
+
+## Run LAGraph experiments
+
+Download matrices from SuiteSparse and place them in `matrices/`:
+
+* [cti](https://suitesparse-collection-website.herokuapp.com/MM/DIMACS10/cti.tar.gz)
+* [bcspwr10](https://suitesparse-collection-website.herokuapp.com/MM/HB/bcspwr10.tar.gz)
+* [G57](https://suitesparse-collection-website.herokuapp.com/MM/Gset/G57.tar.gz)
+* [3elt_dual](https://suitesparse-collection-website.herokuapp.com/MM/AG-Monien/3elt_dual.tar.gz)
+
+Run experiments:
+
+```bash
+./scripts/run_lagraph_experiments.sh <max_threads> <matrices_dir> <lagraph_bfs_path>
+
+# Example:
+./scripts/run_lagraph_experiments.sh 4 ./matrices ./lagraph_bfs
+```
+
+This creates results in `experiments/results_lagraph/<matrix_name>_lagraph/`.
+
+## Process LAGraph results
+
+```bash
+dotnet fsi scripts/lagraph_results_to_data.fsx
+```
+
+Results are saved to:
+- `experiments/data/bfs_data_lagraph/` - BFS times
+- `experiments/data/convertation_data_lagraph/` - Matrix load times
