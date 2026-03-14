@@ -1,5 +1,15 @@
 experiments/results/
 experiments/data/
+experiments/results_lagraph/
 matrices/
 
 inpla/
+venv/
+
+lagraph_bfs
+*.o
+*.png
+plots/
+__pycache__/
+*.pyc
+.inpla.history.txt
