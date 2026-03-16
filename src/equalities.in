@@ -26,6 +26,13 @@ isNone(r) >< x => r ~ False, x ~ Eraser;
 isNone(r) >< int x => r ~ False;
 isNone(r) >< None => r ~ True;
 
+isSome(r) >< x => r ~ False, x ~ Eraser;
+isSome(r) >< int x => r ~ False;
+isSome(r) >< Some(xval) => r ~ True, Eraser ~ xval;
+
+isUserValueNone(r) >< x => x ~ Eraser, r ~ False;
+isUserValueNone(r) >< UserValue(v) => isNone(r) ~ v;
+
 eq_1(r, x) >< None => isNone(r) ~ x;
 eq_1(r, x) >< Some(yval) => eq_1(r, yval) ~ x;
 
@@ -77,6 +84,10 @@ or_1(r, a) >< False => r ~ a;
 or_1(r, a) >< True => r ~ True, a ~ Eraser;
 
 Or(r) >< (a, b) => or_1(r, a) ~ b;
+
+Or3(r) >< (a, b, c) =>
+  Or(ab) ~ (a, b),
+  Or(r) ~ (ab, c);
 
 less_2(r, y) >< x => r ~ False, (y, x) ~ Eraser;
 

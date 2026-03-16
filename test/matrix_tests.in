@@ -103,3 +103,71 @@ r; free r tree1 tree2;
 coo ~ [(0, 0, 1)];
 QTreeFromCoordinateList(r) ~ (3, 3, 4, coo);
 r; free r coo;
+
+
+coo ~ [(0, 3, 1)];
+SMFromCoordinateList(m) ~ (4, 4, 4, coo);
+SMTranspose(r) ~ m;
+r; free ifce;
+
+// NN1D
+// NN2D
+// 123D
+// DDDD
+
+tree ~ QTreeNode(
+  QTreeLeaf(UserValue(None)),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(1))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(UserValue(Some(2))),
+    QTreeLeaf(Dummy)
+  ),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(1))),
+    QTreeLeaf(UserValue(Some(2))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy)
+  ),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(3))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy)
+  )
+);
+
+m ~ SparseMatrix(3, 3, 5, 4, tree);
+SMGetLowerTriangle(r) ~ m;
+r; free ifce;
+
+tree ~ QTreeNode(
+  QTreeLeaf(UserValue(None)),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(1))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(UserValue(Some(2))),
+    QTreeLeaf(Dummy)
+  ),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(1))),
+    QTreeLeaf(UserValue(Some(2))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy)
+  ),
+  QTreeNode(
+    QTreeLeaf(UserValue(Some(3))),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy),
+    QTreeLeaf(Dummy)
+  )
+);
+
+m ~ SparseMatrix(3, 3, 5, 4, tree);
+
+SMReduce(r) ~ (%op_add, None, m);
+r; free ifce;
+
+tree ~ QTreeLeaf(UserValue(Some(1)));
+QTreeReduce(r) ~ (%op_add, None, 4, tree);
+r; free ifce;

@@ -1,0 +1,43 @@
+
+use "./src/linear_algebra.in";
+
+triangle_count_op_add_2(r, yval) >< None =>
+  r ~ Some(yval);
+
+triangle_count_op_add_2(r, yval) >< Some(xval) =>
+  w << Add(xval, yval),
+  r ~ Some(w);
+
+triangle_count_op_add_1(r, x) >< Some(yval) =>
+  triangle_count_op_add_2(r, yval) ~ x;
+
+triangle_count_op_add_1(r, x) >< None => r ~ x;
+
+triangle_count_op_add(r) >< (x, y) =>
+  triangle_count_op_add_1(r, x) ~ y;
+
+triangle_count_op_mul_2(r) >< Some(xval) =>
+  r ~ Some(1),
+  Eraser ~ xval;
+
+triangle_count_op_mul_2(r) >< None =>
+  r ~ None;
+
+triangle_count_op_mul_1(r, x) >< Some(yval) =>
+  yval ~ Eraser,
+  triangle_count_op_mul_2(r) ~ x;
+
+triangle_count_op_mul_1(r, x) >< None => r ~ None, Eraser ~ x;
+
+triangle_count_op_mul(r) >< (x, y) =>
+  triangle_count_op_mul_1(r, x) ~ y;
+
+triangle_count(r) >< graph =>
+  SMGetLowerTriangle(lower) ~ graph,
+  lower ~ Dup3(lower1, lower2, lower3),
+  SMTranspose(transposed) ~ (lower2),
+  mxm(c) ~ (%triangle_count_op_add, %triangle_count_op_mul, lower1, transposed),
+
+  SMMask(cmasked) ~ (%isSome, c, lower3),
+
+  SMReduce(r) ~ (%triangle_count_op_add, None, cmasked);

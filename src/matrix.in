@@ -33,6 +33,17 @@ Add4(r, x1, x2, x3) >< x4 =>
   x34 << Add(x3, x4),
   r << Add(x12, x34);
 
+qtree_mask_f_conditional_decons(r, v1) >< False =>
+  r ~ None,
+  v1 ~ Eraser;
+
+qtree_mask_f_conditional_decons(r, v1) >< True =>
+  r ~ v1;
+
+qtree_mask_f_conditional(r, f) >< (v1, v2) =>
+  f ~ (w, v2),
+  btree_mask_f_conditional_decons(r, v1) ~ w;
+
 
 qtreemkNode_1(r, nw, ne, sw, se) >< True =>
   Eraser ~ (ne, sw, se),
@@ -288,6 +299,133 @@ QTreeFromCoordinateList(r) >< (nrows, ncols, ssize, coo) =>
 
 // QTreeFromCoordinateList END
 
+// QTreeTranspose BEGIN
+
+QTreeTranspose(r) >< QTreeNode(nw, ne, sw, se) =>
+  QTreeMkNode(r) ~ (rnw, rne, rsw, rse),
+  QTreeTranspose(rnw) ~ nw,
+  QTreeTranspose(rne) ~ sw, // !
+  QTreeTranspose(rsw) ~ ne, // !
+  QTreeTranspose(rse) ~ se;
+
+QTreeTranspose(r) >< QTreeLeaf(val) =>
+  r ~ QTreeLeaf(val);
+
+
+// QTreeTranspose END
+
+// QTreeGetLowerTriangle BEGIN
+
+QTreeMakeNoneDecons(r, ssize) >< QTreeNode(nw, ne, sw, se) =>
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup4(halfSize1, halfSize2, halfSize3, halfSize4),
+  rnwfull << QTreeMakeNoneDecons(halfSize1, nw),
+  rnefull << QTreeMakeNoneDecons(halfSize2, ne),
+  rswfull << QTreeMakeNoneDecons(halfSize3, sw),
+  rsefull << QTreeMakeNoneDecons(halfSize4, se),
+  rnwfull ~ (rnw, nw_nvals_removed),
+  rnefull ~ (rne, ne_nvals_removed),
+  rswfull ~ (rsw, sw_nvals_removed),
+  rsefull ~ (rse, se_nvals_removed),
+  nvals << Add4(nw_nvals_removed, ne_nvals_removed, sw_nvals_removed, se_nvals_removed),
+  QTreeMkNode(rtree) ~ (rnw, rne, rsw, rse),
+  r ~ (rtree, nvals);
+
+
+QTreeMakeNoneDeconsDummyCheck(r, ssize) >< False =>
+  ssize ~ Dup(ssize1, ssize2), area << Mul(ssize1, ssize2),
+  r ~ (QTreeLeaf(UserValue(None)), area);
+
+QTreeMakeNoneDeconsDummyCheck(r, ssize) >< True =>
+  r ~ (QTreeLeaf(Dummy), 0), Eraser ~ ssize;
+
+QTreeMakeNoneDecons(r, ssize) >< QTreeLeaf(val) =>
+  isDummy(cond) ~ val,
+  QTreeMakeNoneDeconsDummyCheck(r, ssize) ~ cond;
+
+QTreeGetLowerTriangleDeconsNoneDummySizeCheck(r, ssize, val) >< False =>
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup3(halfSize1, halfSize2, halfSize4),
+  val ~ Dup3(val1, val3, val4),
+  rnwfull << QTreeGetLowerTriangleDecons(halfSize1, QTreeLeaf(val1)),
+  halfSize2 ~ Dup(t1, t2), area << Mul(t1, t2),
+  (rne, ne_nvals_removed) ~ (QTreeLeaf(UserValue(None)), area),
+  (rsw, sw_nvals_removed) ~ (QTreeLeaf(val3), 0),
+  rsefull << QTreeGetLowerTriangleDecons(halfSize4, QTreeLeaf(val4)),
+  rnwfull ~ (rnw, nw_nvals_removed),
+  rsefull ~ (rse, se_nvals_removed),
+  nvals << Add4(nw_nvals_removed, ne_nvals_removed, sw_nvals_removed, se_nvals_removed),
+  QTreeMkNode(rtree) ~ (rnw, rne, rsw, rse),
+  r ~ (rtree, nvals);
+
+QTreeGetLowerTriangleDeconsNoneDummySizeCheck(r, ssize, val) >< True =>
+  r ~ (QTreeLeaf(val), 0), Eraser ~ ssize;
+
+QTreeGetLowerTriangleDecons(r, ssize) >< QTreeLeaf(val) =>
+  val ~ Dup3(val1, val2, val3),
+  ssize ~ Dup(ssize1, ssize2),
+  isDummy(val_dummy) ~ val1,
+  isUserValueNone(val_none) ~ val2,
+  Eq(ssize_1) ~ (ssize1, 1),
+  Or3(cond) ~ (val_dummy, val_none, ssize_1),
+  QTreeGetLowerTriangleDeconsNoneDummySizeCheck(r, ssize2, val3) ~ cond;
+
+QTreeGetLowerTriangleDecons(r, ssize) >< QTreeNode(nw, ne, sw, se) =>
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup3(halfSize1, halfSize2, halfSize4),
+  rnwfull << QTreeGetLowerTriangleDecons(halfSize1, nw),
+  rnefull << QTreeMakeNoneDecons(halfSize2, ne),
+  sw_nvals_removed ~ 0,
+  rsefull << QTreeGetLowerTriangleDecons(halfSize4, se),
+  rnwfull ~ (rnw, nw_nvals_removed),
+  rnefull ~ (rne, ne_nvals_removed),
+  rsefull ~ (rse, se_nvals_removed),
+  nvals_removed << Add4(nw_nvals_removed, ne_nvals_removed, sw_nvals_removed, se_nvals_removed),
+  QTreeMkNode(rtree) ~ (rnw, rne, sw, rse),
+  r ~ (rtree, nvals_removed);
+
+// returns (qtree, nvals_removed)
+QTreeGetLowerTriangle(r) >< (ssize, qtree) =>
+  QTreeGetLowerTriangleDecons(r, ssize) ~ qtree;
+
+// QTreeGetLowerTriangle END
+
+// QTreeReduce BEGIN
+
+foldValue(r, folder, accum) >< int ssize
+  | ssize == 1 => r ~ accum, Eraser ~ (folder)
+  | _ =>
+    halfSize << Div(ssize, 2),
+    folder ~ Dup(folder1, folder2),
+    accum ~ Dup(accum1, accum2),
+    folder1 ~ (w, (accum1, accum2)),
+    foldValue(r, folder2, w) ~ halfSize;
+
+QTreeReduceDeconsValue(r, folder, state, ssize) >< UserValue(val) =>
+  folder ~ Dup(folder1, folder2),
+  ssize ~ Dup(ssize1, ssize2), area << Mul(ssize1, ssize2),
+  foldValue(w, folder1, val) ~ area,
+  folder2 ~ (r, (state, w));
+
+QTreeReduceDeconsValue(r, folder, state, ssize) >< Dummy =>
+  r ~ state, Eraser ~ (folder, ssize);
+
+QTreeReduceDecons(r, folder, state, ssize) >< QTreeLeaf(vval) =>
+  QTreeReduceDeconsValue(r, folder, state, ssize) ~ vval;
+
+QTreeReduceDecons(r, folder, state, ssize) >< QTreeNode(nw, ne, sw, se) =>
+  halfSize << Div(ssize, 2),
+  halfSize ~ Dup4(halfSize1, halfSize2, halfSize3, halfSize4),
+  folder ~ Dup4(folder1, folder2, folder3, folder4),
+  nwstate << QTreeReduceDecons(folder1, state, halfSize1, nw),
+  nestate << QTreeReduceDecons(folder2, nwstate, halfSize2, ne),
+  swstate << QTreeReduceDecons(folder3, nestate, halfSize3, sw),
+  r       << QTreeReduceDecons(folder4, swstate, halfSize4, se);
+
+QTreeReduce(r) >< (folder, state, ssize, qtree) =>
+  QTreeReduceDecons(r, folder, state, ssize) ~ qtree;
+
+// QTreeReduce END
 
 // SparseMatrix(nrows, nvols, nvals, ssize, tree)
 // Shortened to SM
@@ -304,3 +442,48 @@ SMFromCoordinateList(r) >< (nrows, ncols, ssize, coo) =>
   QTreeFromCoordinateList(qtree) ~ (nrows1, ncols1, ssize1, coo2),
 
   r ~ SparseMatrix(nrows2, ncols2, nvals, ssize2, qtree);
+
+// SMTranspose
+
+SMTranspose(r) >< SparseMatrix(nrows, ncols, nvals, ssize, qtree) =>
+  QTreeTranspose(rqtree) ~ qtree,
+  r ~ SparseMatrix(ncols, nrows, nvals, ssize, rqtree);
+
+// SMGetLowerTriangle
+
+SMGetLowerTriangle(r) >< SparseMatrix(nrows, ncols, nvals, ssize, qtree) =>
+  ssize ~ Dup(ssize1, ssize2),
+  QTreeGetLowerTriangle(rtreefull) ~ (ssize1, qtree),
+  rtreefull ~ (rtree, nvals_removed),
+  rnvals << Sub(nvals, nvals_removed),
+  r ~ SparseMatrix(nrows, ncols, rnvals, ssize2, rtree);
+
+// SMReduce
+
+SMReduceDecons(r, folder, state) >< SparseMatrix(nrows, ncols, nvals, ssize, tree) =>
+  QTreeReduce(r) ~ (folder, state, ssize, tree),
+  Eraser ~ (nrows, ncols, nvals);
+
+SMReduce(r) >< (folder, state, m) =>
+  SMReduceDecons(r, folder, state) ~ m;
+
+// SMMap2
+
+SMMap2Decons_2(r, f, tree1) >< SparseMatrix(nrows2, ncols2, nvals2, ssize2, tree2) =>
+  QTreeMap2(rtreefull) ~ (f, ssize_1, tree1, tree2),
+  ssize2 ~ Dup(ssize_1, ssize_2),
+  rtreefull ~ (rtree, rnvals),
+  Eraser ~ nvals2,
+  r ~ SparseMatrix(nrows2, ncols2, rnvals, ssize_2, rtree);
+
+SMMap2Decons_1(r, f, m2) >< SparseMatrix(nrows1, ncols1, nvals1, ssize1, tree1) =>
+  SMMap2Decons_2(r, f, tree1) ~ m2,
+  Eraser ~ (nrows1, ncols1, nvals1, ssize1);
+
+SMMap2(r) >< (f, m1, m2) =>
+  SMMap2Decons_1(r, f, m2) ~ m1;
+
+// SMMask
+
+SMMask(r) >< (f, m1, m2) =>
+  SMMap2(r) ~ ((w, qtree_mask_f_conditional(w, f)), m1, m2);
