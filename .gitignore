@@ -1,5 +1,11 @@
-experiments/results/
-experiments/data/
+experiments_bfs/results/
+experiments_bfs/data/
+
+experiments_tc/results/
+experiments_tc/data/
 matrices/
 
+
 inpla/
+
+*.mtx

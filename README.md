@@ -4,7 +4,7 @@ QuadTree linear algebra implementation in Inpla.
 
 # How to preprocess graphs
 
-Structured matrices should better fit to quad-trees. 
+Structured matrices should better fit to quad-trees.
 
 You can use `./scripts/simple_mtx_reordering.py` to reorder matrices stored in `mtx` files.
 
@@ -23,11 +23,11 @@ python spy_mtx.py original.mtx original_spy.png --title "Original Matrix"
 | Original | Reordered |
 | :--- | :--- |
 | webbase-1M.mtx |
-| ![Original webbase-1M](experiments/figures/original_webbase.png) | ![Reordered webbase-1M](experiments/figures/reordered_webbase.png) |
+| ![Original webbase-1M](reordering_figures/original_webbase.png) | ![Reordered webbase-1M](reordering_figures/reordered_webbase.png) |
 | coAuthorsCiteseer.mtx |
-| ![Original coAuthorsCiteseer](experiments/figures/original_coAuthors.png) | ![Reordered coAuthorsCiteseer](experiments/figures/reordered_coAuthors.png) |
+| ![Original coAuthorsCiteseer](reordering_figures/original_coAuthors.png) | ![Reordered coAuthorsCiteseer](reordering_figures/reordered_coAuthors.png) |
 | arc130.mtx |
-| ![Original arc130](experiments/figures/original_arc_130.png) | ![Reordered arc130](experiments/figures/reordered_arc_130.png) |
+| ![Original arc130](reordering_figures/original_arc_130.png) | ![Reordered arc130](reordering_figures/reordered_arc_130.png) |
 
 # How to run experiments
 
