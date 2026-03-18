@@ -3,12 +3,34 @@
 open System
 open System.IO
 
-let resultsPath = "experiments/results/"
-let convertationPath = "experiments/data/convertation_data/"
-let bfsPath = "./experiments/data/bfs_data/"
+#load "./common_get_experiment.fsx"
 
-let convertationLine = 2
-let bfsLine = 5
+open Common_get_experiment
+
+let resultsPath alg =
+    match alg with
+    | TC -> "experiments_tc/results/"
+    | BFS -> "experiments_bfs/results/"
+
+
+let convertationPath alg =
+    match alg with
+    | TC -> "experiments_tc/data/convertation_data/"
+    | BFS -> "experiments_bfs/data/convertation_data/"
+
+let algPath alg =
+    match alg with
+    | TC -> "./experiments_tc/data/algorithm_data/"
+    | BFS -> "./experiments_bfs/data/algorithm_data/"
+
+let convertationLine alg =
+    alg |> ignore
+    2
+
+let algLine alg =
+    match alg with
+    | TC -> 3
+    | BFS -> 5
 
 let getTime (str: string) =
     // ... interactions (by n threads), t sec)
@@ -24,47 +46,54 @@ let getThreads (str: string) =
     int <| words.[threadword]
 
 // Gets number of threads and time
-let handleFile filePath =
-    let text = File.ReadAllLines(filePath)
-    let threads = getThreads text.[bfsLine]
-    let bfsTime = getTime text.[bfsLine]
-    let convertationTime = getTime text.[convertationLine]
-    threads, bfsTime, convertationTime
+let handleFile alg filePath =
+    let text = File.ReadAllLines filePath
+    let threads = getThreads text.[algLine alg]
+    let algTime = getTime text.[algLine alg]
+    let convertationTime = getTime text.[convertationLine alg]
+    threads, algTime, convertationTime
 
-let handleDirectory dir =
+let handleDirectory alg dir =
     let files = Directory.GetFiles(dir, "*.output")
-    let data = files |> Array.map handleFile |> Array.rev
+    let data = files |> Array.map (handleFile alg) |> Array.rev
 
     let convertationDataFile =
         data
         |> Array.map (fun (threads, _, convertTime) -> sprintf "%d %s" threads convertTime)
         |> String.concat "\n"
 
-    let bfsDataFile =
+    let algDataFile =
         data
-        |> Array.map (fun (threads, bfsTime, _) -> sprintf "%d %s" threads bfsTime)
+        |> Array.map (fun (threads, algTime, _) -> sprintf "%d %s" threads algTime)
         |> String.concat "\n"
 
     let name = DirectoryInfo(dir).Name
-    (name, bfsDataFile, convertationDataFile)
+    name, algDataFile, convertationDataFile
 
+let usage = $"Usage: {fsi.CommandLineArgs.[0]} ('bfs' | 'tc')"
 
-let main args =
+let main (args: string array) =
+    if Array.length args <> 2 then
+        eprintfn "%s" usage
+        exit 1
+
+    let alg = args.[1] |> getAlgorithm
+
     let dirs =
-        Directory.GetDirectories(resultsPath)
-        |> Array.except [ bfsPath; convertationPath ]
+        Directory.GetDirectories(resultsPath alg)
+        |> Array.except [ algPath alg; convertationPath alg ]
 
-    let data = dirs |> Array.map handleDirectory
-    Directory.CreateDirectory(convertationPath) |> ignore
-    Directory.CreateDirectory(bfsPath) |> ignore
+    let data = dirs |> Array.map (handleDirectory alg)
+    Directory.CreateDirectory(convertationPath alg) |> ignore
+    Directory.CreateDirectory(algPath alg) |> ignore
 
-    for (name, bfsData, convertationData) in data do
+    for name, algData, convertationData in data do
         printfn "Successfully processed %s data" name
-        let bfsData = sprintf "%s\n%s" name bfsData
+        let algData = sprintf "%s\n%s" name algData
         let convertationData = sprintf "%s\n%s" name convertationData
         let name = name + ".data"
-        File.WriteAllText(bfsPath + name, bfsData)
-        File.WriteAllText(convertationPath + name, convertationData)
+        File.WriteAllText(algPath alg + name, algData)
+        File.WriteAllText(convertationPath alg + name, convertationData)
 
     0
 

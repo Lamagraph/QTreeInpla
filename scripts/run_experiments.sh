@@ -1,25 +1,37 @@
 #!/bin/bash
 
-if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 <path_to_inpla> <max_threads>"
+if [ "$#" -ne 3 ]; then
+  echo "Usage: $0 <path_to_inpla> <max_threads> (bfs | tc)"
   exit 1
 fi
 
 INPLA_PATH="$1"
 MAX_THREADS="$2"
+ALGORITHM="$3"
 
-if [ ! -d "./experiments" ]; then
-  echo "Error: ./experiments/ directory not found"
+case "$3" in
+    "bfs"|"tc")
+        ;;
+    *)
+        echo "Error: Third argument must be 'bfs' or 'tc'."
+        exit 1
+        ;;
+esac
+
+EXPERIMENTS_FOLDER="./experiments_${ALGORITHM}"
+
+if [ ! -d $EXPERIMENTS_FOLDER ]; then
+  echo "Error: ${EXPERIMENTS_FOLDER} directory not found"
   exit 1
 fi
 
-for EXPERIMENT in ./experiments/*.in; do
+for EXPERIMENT in $EXPERIMENTS_FOLDER/*.in; do
   [ -e "$EXPERIMENT" ] || continue
 
   FILENAME=$(basename "$EXPERIMENT")
   EXPERIMENT_NAME="${FILENAME%.in}"
 
-  RESULTS_DIR="./experiments/results/$EXPERIMENT_NAME"
+  RESULTS_DIR="$EXPERIMENTS_FOLDER/results/$EXPERIMENT_NAME"
   mkdir -p "$RESULTS_DIR"
 
   echo "Starting experiment: $EXPERIMENT_NAME"
