@@ -19,3 +19,21 @@ ListLength(r) >< x:xs =>
   x ~ Eraser,
   ListLength(w) ~ xs,
   r << Add(w, 1);
+
+filterRemainderAppliedPredicate(res, rem, predicate, x, xs) >< True =>
+  ListFilterRemainder(wres, wrem, predicate) ~ xs,
+  res ~ x:wres,
+  rem ~ wrem;
+
+filterRemainderAppliedPredicate(res, rem, predicate, x, xs) >< False =>
+  ListFilterRemainder(wres, wrem, predicate) ~ xs,
+  res ~ wres,
+  rem ~ x:wrem;
+
+ListFilterRemainder(res, rem, predicate) >< [] => res ~ [], rem ~ [], predicate ~ Eraser;
+
+ListFilterRemainder(res, rem, predicate) >< x:xs =>
+  x ~ Dup(x1, x2),
+  predicate ~ Dup(predicate1, predicate2),
+  predicate1 ~ (isTrue, x1),
+  filterRemainderAppliedPredicate(res, rem, predicate2, x2, xs) ~ isTrue;

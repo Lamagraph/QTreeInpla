@@ -217,7 +217,6 @@ cooTraverseDeconsBoolean(r, nrows, ncols, ssize, pr, pc, xs, i, j, val) >< False
 cooTraverseList(r, nrows, ncols, ssize, pr, pc) >< coo =>
   QTreeMkNode(r) ~ (rnw, rne, rsw, rse),
   halfSize << Div(ssize, 2),
-  coo ~ Dup4(coo1, coo2, coo3, coo4),
   halfSize ~ Dup3(halfSize1, thalfSize1, thalfSize2),
   thalfSize1 ~ Dup4(halfSize2, halfSize3, halfSize4, halfSize5),
   thalfSize2 ~ Dup4(halfSize6, halfSize7, halfSize8, halfSize9),
@@ -229,10 +228,11 @@ cooTraverseList(r, nrows, ncols, ssize, pr, pc) >< coo =>
   (nwpr, nepr, swpr, sepr) ~ Dup((nwpr1, nepr1, swpr1, sepr1), (nwpr2, nepr2, swpr2, sepr2)),
   (nwpc, nepc, swpc, sepc) ~ Dup((nwpc1, nepc1, swpc1, sepc1), (nwpc2, nepc2, swpc2, sepc2)),
 
-  nwCoo << ListFilter((w1, isEntryInCoords(w1, nwpr1, nwpc1, halfSize2)), coo1),
-  neCoo << ListFilter((w2, isEntryInCoords(w2, nepr1, nepc1, halfSize3)), coo2),
-  swCoo << ListFilter((w3, isEntryInCoords(w3, swpr1, swpc1, halfSize4)), coo3),
-  seCoo << ListFilter((w4, isEntryInCoords(w4, sepr1, sepc1, halfSize5)), coo4),
+  nwCoo << ListFilterRemainder(rem1, (w1, isEntryInCoords(w1, nwpr1, nwpc1, halfSize2)), coo),
+  neCoo << ListFilterRemainder(rem2, (w2, isEntryInCoords(w2, nepr1, nepc1, halfSize3)), rem1),
+  swCoo << ListFilterRemainder(rem3, (w3, isEntryInCoords(w3, swpr1, swpc1, halfSize4)), rem2),
+  seCoo << ListFilterRemainder(rem4, (w4, isEntryInCoords(w4, sepr1, sepc1, halfSize5)), rem3),
+  rem4 ~ Eraser,
 
   rnw << cooTraverse(nrows1, ncols1, halfSize6, nwpr2, nwpc2, nwCoo),
   rne << cooTraverse(nrows2, ncols2, halfSize7, nepr2, nepc2, neCoo),
