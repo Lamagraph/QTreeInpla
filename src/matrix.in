@@ -332,7 +332,8 @@ QTreeMakeNoneDecons(r, ssize) >< QTreeNode(nw, ne, sw, se) =>
   r ~ (rtree, nvals);
 
 
-QTreeMakeNoneDeconsDummyCheck(r, ssize) >< False =>
+QTreeMakeNoneDeconsDummyCheck(r, ssize) >< No(x) =>
+  Eraser ~ x,
   ssize ~ Dup(ssize1, ssize2), area << Mul(ssize1, ssize2),
   r ~ (QTreeLeaf(UserValue(None)), area);
 
@@ -364,7 +365,8 @@ QTreeGetLowerTriangleDeconsNoneDummySizeCheck(r, ssize, val) >< True =>
 QTreeGetLowerTriangleDecons(r, ssize) >< QTreeLeaf(val) =>
   val ~ Dup3(val1, val2, val3),
   ssize ~ Dup(ssize1, ssize2),
-  isDummy(val_dummy) ~ val1,
+  isDummy(val_dummy_no) ~ val1,
+  NoToBool(val_dummy) ~ val_dummy_no,
   isUserValueNone(val_none) ~ val2,
   Eq(ssize_1) ~ (ssize1, 1),
   Or3(cond) ~ (val_dummy, val_none, ssize_1),

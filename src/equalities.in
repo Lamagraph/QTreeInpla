@@ -38,25 +38,54 @@ eq_1(r, x) >< Some(yval) => eq_1(r, yval) ~ x;
 
 // Values: UserValue(val), Dummy
 
-isDummy(r) >< int x => r ~ False;
-isDummy(r) >< x => r ~ False, x ~ Eraser;
+NoToBool(r) >< x => r ~ x;
+NoToBool(r) >< No(x) => Eraser ~ x, r ~ False;
+
+isDummy(r) >< int x => r ~ No(x);
+isDummy(r) >< x => r ~ No(x);
 isDummy(r) >< Dummy => r ~ True;
 
-isDummyBTreeLeaf(r) >< int x => r ~ False;
+isDummyBTreeLeaf(r) >< int x => r ~ No(QTreeLeaf(x));
 isDummyBTreeLeaf(r) >< x =>
-  x ~ Eraser,
-  r ~ False;
+  r ~ No(x);
+
+isDummyBTreeLeaf(r) >< True => r ~ True;
+isDummyBTreeLeaf(r) >< No(x) => r ~ No(BTreeLeaf(x));
+
 isDummyBTreeLeaf(r) >< BTreeLeaf(val) =>
-  isDummy(r) ~ val;
+  isDummy(w) ~ val,
+  isDummyBTreeLeaf(r) ~ w;
 
-isDummyQTreeLeaf(r) >< int x => r ~ False;
+// Returns: True | No(QTree(...))
+isDummyQTreeLeaf(r) >< int x => r ~ No(QTreeLeaf(x));
 isDummyQTreeLeaf(r) >< x =>
-  x ~ Eraser,
-  r ~ False;
-isDummyQTreeLeaf(r) >< QTreeLeaf(val) =>
-  isDummy(r) ~ val;
+  r ~ No(x);
 
-eq_1(r, x) >< Dummy => isDummy(r) ~ x;
+isDummyQTreeLeaf(r) >< True => r ~ True;
+
+isDummyQTreeLeaf(r) >< No(x) => // From leaf val
+  r ~ No(QTreeLeaf(x));
+isDummyQTreeLeaf(r) >< QTreeLeaf(val) =>
+  isDummy(w) ~ val,
+  isDummyQTreeLeaf(r) ~ w;
+
+
+orno_2(r, yval) >< No(xval) =>
+  r ~ NoNo(xval, yval);
+
+orno_2(r, yval) >< True =>
+  r ~ True,
+  Eraser ~ yval;
+
+orno_1(r, x) >< No(yval) =>
+  orno_2(r, yval) ~ x;
+
+orno_1(r, x) >< True => r ~ True, x ~ Eraser;
+
+OrNo(r) >< (x, y) =>
+  orno_1(r, x) ~ y;
+
+eq_1(r, x) >< Dummy => isDummy(w) ~ x, NoToBool(r) ~ w;
 eq_1(r, x) >< UserValue(yval) => eq_1(r, yval) ~ x;
 
 Eq(r) >< (x, y) =>
