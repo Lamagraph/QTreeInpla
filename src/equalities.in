@@ -142,3 +142,21 @@ leq_1(r, x) >< int y =>
   leq_2(r, y) ~ x;
 
 Leq(r) >< (x, y) => leq_1(r, x) ~ y;
+
+min_2(r, int y) >< int x
+  | x < y => r ~ x
+  | _     => r ~ y;
+
+min_1(r, x) >< int y =>
+  min_2(r, y) ~ x;
+
+Min(r) >< (x, y) => min_1(r, x) ~ y;
+
+min_destr_2(r, int y) >< int x
+  | x < y => r ~ Some(x)
+  | _     => r ~ None;
+
+min_destr_1(r, x) >< int y =>
+  min_destr_2(r, y) ~ x;
+
+MinDestr(r) >< (x, y) => min_destr_1(r, x) ~ y;

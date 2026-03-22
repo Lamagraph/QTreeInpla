@@ -1,0 +1,98 @@
+
+use "./src/linear_algebra.in";
+
+
+sssp_op_add_2(r, yval) >< Some(xval) =>
+  Min(w) ~ (xval, yval),
+  r ~ Some(w);
+
+sssp_op_add_2(r, yval) >< None =>
+  r ~ Some(yval);
+
+sssp_op_add_1(r, x) >< Some(yval) =>
+  sssp_op_add_2(r, yval) ~ x;
+
+sssp_op_add_1(r, x) >< None => r ~ x;
+
+sssp_op_add(r) >< (x, y) =>
+  sssp_op_add_1(r, x) ~ y;
+
+sssp_op_mul_2(r, yval) >< Some(xval) =>
+  w << Add(xval, yval),
+  r ~ Some(w);
+
+sssp_op_mul_2(r, yval) >< None =>
+  Eraser ~ yval,
+  r ~ None;
+
+sssp_op_mul_1(r, x) >< Some(yval) =>
+  sssp_op_mul_2(r, yval) ~ x;
+
+sssp_op_mul_1(r, x) >< None =>
+  r ~ None,
+  x ~ Eraser;
+
+sssp_op_mul(r) >< (x, y) =>
+  sssp_op_mul_1(r, x) ~ y;
+
+
+sssp_op_min_2(r, yval) >< Some(xval) =>
+  MinDestr(r) ~ (xval, yval);
+
+sssp_op_min_2(r, yval) >< None =>
+  r ~ None,
+  Eraser ~ yval;
+
+sssp_op_min_1(r, x) >< Some(yval) =>
+  sssp_op_min_2(r, yval) ~ x;
+
+sssp_op_min_1(r, x) >< None => r ~ x;
+
+sssp_op_min(r) >< (x, y) =>
+  sssp_op_min_1(r, x) ~ y;
+
+sssp_inner_check_cond(r, graph, visited, iter_num, nlen, ssize, ftree) >< True =>
+  graph ~ Dup(graph1, graph2),
+  visited ~ Dup(visited1, visited2),
+
+  frontier ~ SparseVector(nlen, -1, ssize, ftree),
+
+  vxm(new_frontier) ~ (%sssp_op_add, %sssp_op_mul, frontier, graph1),
+
+  SVMap2(frontier_min) ~ (%sssp_op_min, new_frontier, visited1),
+
+  frontier_min ~ Dup(frontier_min1, frontier_min2),
+
+  SVMap2(added_visited) ~ (%sssp_op_add, visited2, frontier_min1),
+
+  riter_num << Add(iter_num, 1),
+  sssp_inner(r, graph2) ~ (frontier_min2, added_visited, riter_num);
+
+
+sssp_inner_check_cond(r, graph, visited, iter_num, nlen, ssize, ftree) >< False =>
+  r ~ visited,
+  Eraser ~ (graph, iter_num, nlen, ssize, ftree);
+
+// iter_num <= nlen && 0 < nvals
+sssp_inner_frontier_decons(r, graph, visited, iter_num) >< SparseVector(nlen, nvals, ssize, ftree) =>
+  nlen ~ Dup(nlen1, nlen2),
+  iter_num ~ Dup(iter_num1, iter_num2),
+  Leq(cond1) ~ (iter_num1, nlen1),
+  Less(cond2) ~ (0, nvals),
+  And(cond) ~ (cond1, cond2),
+  sssp_inner_check_cond(r, graph, visited, iter_num2, nlen2, ssize, ftree) ~ cond;
+
+sssp_inner(r, graph) >< (frontier, visited, iter_num) =>
+  sssp_inner_frontier_decons(r, graph, visited, iter_num) ~ frontier;
+
+sssp_1(r, startVertex) >< SparseMatrix(nrows, ncols, nvals, ssize, tree) =>
+  coo ~ [ (startVertex, 0) ],
+  nrows ~ Dup(nrows1, nrows2),
+  ssize ~ Dup(ssize1, ssize2),
+  SVFromCoordinateList(frontier) ~ (nrows1, ssize1, coo),
+  frontier ~ Dup(frontier1, frontier2),
+  graph ~ SparseMatrix(nrows2, ncols, nvals, ssize2, tree),
+  sssp_inner(r, graph) ~ (frontier1, frontier2, 0);
+
+sssp(r) >< (graph, startVertex) =>
+  sssp_1(r, startVertex) ~ graph;

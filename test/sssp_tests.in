@@ -1,0 +1,37 @@
+
+use "./src/sssp.in";
+
+tree ~
+  QTreeNode(
+    QTreeNode(
+      QTreeLeaf(UserValue(None)),
+      QTreeLeaf(UserValue(Some(1))),
+      QTreeLeaf(UserValue(Some(3))),
+      QTreeLeaf(UserValue(None))
+    ),
+    QTreeNode(
+      QTreeLeaf(UserValue(Some(1))),
+      QTreeLeaf(UserValue(None)),
+      QTreeLeaf(UserValue(Some(2))),
+      QTreeLeaf(UserValue(Some(3)))
+    ),
+    QTreeLeaf(UserValue(None)),
+    QTreeNode(
+      QTreeLeaf(UserValue(None)),
+      QTreeLeaf(UserValue(Some(2))),
+      QTreeLeaf(UserValue(Some(3))),
+      QTreeLeaf(UserValue(None))
+    )
+  );
+
+graph ~ SparseMatrix(4, 4, 9, 4, tree);
+
+sssp(r) ~ (graph, 0);
+r; free ifce;
+
+coo ~ [ (0, 1, 1), (1, 2, 1), (2, 3, 1), (2, 4, 4), (3, 4, 2), (0, 3, 6) ];
+
+SMFromCoordinateList(graph) ~ (5, 5, 8, coo);
+
+sssp(r) ~ (graph, 0);
+r; free ifce;
