@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -ne 3 ]; then
-  echo "Usage: $0 <path_to_inpla> <max_threads> (bfs | tc)"
+  echo "Usage: $0 <path_to_inpla> <max_threads> (bfs | tc | sssp)"
   exit 1
 fi
 
@@ -10,10 +10,10 @@ MAX_THREADS="$2"
 ALGORITHM="$3"
 
 case "$3" in
-    "bfs"|"tc")
+    "bfs"|"tc"|"sssp")
         ;;
     *)
-        echo "Error: Third argument must be 'bfs' or 'tc'."
+        echo "Error: Third argument must be 'bfs', 'tc' or 'sssp'."
         exit 1
         ;;
 esac

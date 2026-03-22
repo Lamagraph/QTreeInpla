@@ -11,17 +11,20 @@ let resultsPath alg =
     match alg with
     | TC -> "experiments_tc/results/"
     | BFS -> "experiments_bfs/results/"
+    | SSSP -> "experiments_sssp/results/"
 
 
 let convertationPath alg =
     match alg with
     | TC -> "experiments_tc/data/convertation_data/"
     | BFS -> "experiments_bfs/data/convertation_data/"
+    | SSSP -> "experiments_sssp/data/convertation_data/"
 
 let algPath alg =
     match alg with
     | TC -> "./experiments_tc/data/algorithm_data/"
     | BFS -> "./experiments_bfs/data/algorithm_data/"
+    | SSSP -> "./experiments_sssp/data/algorithm_data/"
 
 let convertationLine alg =
     alg |> ignore
@@ -29,7 +32,8 @@ let convertationLine alg =
 
 let algLine alg =
     match alg with
-    | TC -> 3
+    | TC
+    | SSSP -> 3
     | BFS -> 5
 
 let getTime (str: string) =
@@ -70,7 +74,7 @@ let handleDirectory alg dir =
     let name = DirectoryInfo(dir).Name
     name, algDataFile, convertationDataFile
 
-let usage = $"Usage: {fsi.CommandLineArgs.[0]} ('bfs' | 'tc')"
+let usage = $"Usage: {fsi.CommandLineArgs.[0]} ('bfs' | 'tc' | 'sssp')"
 
 let main (args: string array) =
     if Array.length args <> 2 then

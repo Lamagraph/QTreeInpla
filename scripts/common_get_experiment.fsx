@@ -184,14 +184,35 @@ triangle_count(r) ~ (graph);
         ssize
         nrows
 
+let getExperimentSSSP nrows coo =
+    let ssize = int <| getNearestUpperPowerOfTwo (uint64 nrows)
+
+    sprintf
+        @"use ""./src/sssp.in"";
+
+coo ~ %s;
+
+const SSIZE=%d;
+const LENGTH=%d;
+const STARTING_VERTEX=0;
+SMFromCoordinateList(graph) ~ (LENGTH, LENGTH, SSIZE, coo);
+sssp(r) ~ (graph, STARTING_VERTEX);
+// To see the result: r; free r;
+"
+        coo
+        ssize
+        nrows
+
 type Algorithm =
     | BFS
     | TC
+    | SSSP
 
 let getExperiment alg nrows coo =
     match alg with
     | BFS -> getExperimentBfs nrows coo
     | TC -> getExperimentTc nrows coo
+    | SSSP -> getExperimentSSSP nrows coo
 
 let usage = $"Usage: {fsi.CommandLineArgs[0]} path/to/matrix.mtx (bfs|tc)"
 
@@ -199,12 +220,14 @@ let getAlgorithm (str: string) =
     match str.ToLower() with
     | "bfs" -> BFS
     | "tc" -> TC
+    | "sssp" -> SSSP
     | _ -> failwith usage
 
 let experimentsPath algorithm =
     match algorithm with
     | BFS -> "./experiments_bfs/"
     | TC -> "./experiments_tc/"
+    | SSSP -> "./experiments_sssp/"
 
 
 let inplaExtension = ".in"
