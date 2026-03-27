@@ -1,14 +1,28 @@
 let getBigCoo (linewords: string array array) =
     linewords
-    |> Array.map (fun x -> ((int x.[0]) - 1), ((int x.[1]) - 1))
+    |> Array.map (fun x -> int x.[0] - 1, int x.[1] - 1)
     |> Array.map (fun (i, j) -> sprintf "(%d, %d, 1)" i j)
     |> String.concat ", "
     |> sprintf "[%s]"
 
 let getBigCooDuplicate (linewords: string array array) =
     linewords
-    |> Array.map (fun x -> ((int x.[0]) - 1), ((int x.[1]) - 1))
+    |> Array.map (fun x -> int x.[0] - 1, int x.[1] - 1)
     |> Array.map (fun (i, j) -> sprintf "(%d, %d, 1), (%d, %d, 1)" i j j i)
+    |> String.concat ", "
+    |> sprintf "[%s]"
+
+let getBigCooValues (linewords: string array array) =
+    linewords
+    |> Array.map (fun x -> int x.[0] - 1, int x.[1] - 1, int x.[2])
+    |> Array.map (fun (i, j, v) -> sprintf "(%d, %d, %d)" i j v)
+    |> String.concat ", "
+    |> sprintf "[%s]"
+
+let getBigCooDuplicateValues (linewords: string array array) =
+    linewords
+    |> Array.map (fun x -> int x.[0] - 1, int x.[1] - 1, int x.[2])
+    |> Array.map (fun (i, j, v) -> sprintf "(%d, %d, %d), (%d, %d, %d)" i j v j i v)
     |> String.concat ", "
     |> sprintf "[%s]"
 
@@ -214,7 +228,26 @@ let getExperiment alg nrows coo =
     | TC -> getExperimentTc nrows coo
     | SSSP -> getExperimentSSSP nrows coo
 
-let usage = $"Usage: {fsi.CommandLineArgs[0]} path/to/matrix.mtx (bfs|tc)"
+let usage =
+    $"Usage: {fsi.CommandLineArgs[0]} path/to/matrix.mtx (bfs|tc|sssp) ((true|false): OPTIONAL get values on the edges. Default: true for sssp, false otherwise)"
+
+let getEdgeValues (args: string array) =
+    if args.Length < 4 then
+        None
+    else if args.[3] = "true" then
+        printfn "Getting the values on the edges"
+        Some true
+    else
+        printfn "Not getting the values on the edges"
+        Some false
+
+let chooseValueCooFunc alg args =
+    let arg = getEdgeValues args
+
+    match arg with
+    | None -> alg = SSSP
+    | Some v -> v
+
 
 let getAlgorithm (str: string) =
     match str.ToLower() with

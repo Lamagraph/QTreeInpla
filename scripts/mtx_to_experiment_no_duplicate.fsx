@@ -25,7 +25,13 @@ let handleFile path algorithm =
     let newFilePath =
         Path.Combine(experimentsPath algorithm, Path.GetFileNameWithoutExtension path + inplaExtension)
 
-    let experiment = getExperiment algorithm nrows (getBigCoo tl)
+    let coo =
+        if chooseValueCooFunc algorithm fsi.CommandLineArgs then
+            getBigCooValues tl
+        else
+            getBigCoo tl
+
+    let experiment = getExperiment algorithm nrows coo
     File.WriteAllText(newFilePath, experiment)
     printfn "Written to %s %d elements" newFilePath tl.Length
     ()
