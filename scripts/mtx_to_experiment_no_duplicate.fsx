@@ -27,7 +27,7 @@ let handleFile path algorithm =
 
     let experiment = getExperiment algorithm nrows (getBigCoo tl)
     File.WriteAllText(newFilePath, experiment)
-    printfn "Written to %s %d elements" newFilePath (tl.Length * 2)
+    printfn "Written to %s %d elements" newFilePath tl.Length
     ()
 
 

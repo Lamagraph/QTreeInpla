@@ -4,6 +4,7 @@ open System
 open System.IO
 
 #load "./common_get_experiment.fsx"
+#r "nuget: FSharp.Data.Adaptive, 1.2.26"
 
 open Common_get_experiment
 
@@ -57,19 +58,47 @@ let handleFile alg filePath =
     let convertationTime = getTime text.[convertationLine alg]
     threads, algTime, convertationTime
 
-let handleDirectory alg dir =
-    let files = Directory.GetFiles(dir, "*.output")
+let getRunNumber dir =
+    let lastName = DirectoryInfo(dir).Name
+    Seq.skip 3 lastName |> string |> int, dir
+
+open FSharp.Data.Adaptive
+
+let handleRun alg (res: HashMap<int, (string * string) list>) path =
+    let alterer data =
+        function
+        | Some v -> Some(data :: v)
+        | None -> Some [ data ]
+
+    let files = Directory.GetFiles(path, "*.output")
     let data = files |> Array.map (handleFile alg) |> Array.rev
+    // Prepend data that has been obtained from this run
+    data
+    |> Array.fold (fun st (i, alg, conv) -> st |> HashMap.alter i (alterer (alg, conv))) res
 
-    let convertationDataFile =
-        data
-        |> Array.map (fun (threads, _, convertTime) -> sprintf "%d %s" threads convertTime)
-        |> String.concat "\n"
 
-    let algDataFile =
-        data
-        |> Array.map (fun (threads, algTime, _) -> sprintf "%d %s" threads algTime)
-        |> String.concat "\n"
+let handleDirectory alg dir =
+    let runs = Directory.GetDirectories dir
+
+    let data = runs |> Array.fold (handleRun alg) HashMap.Empty |> HashMap.toList
+
+    let algorithm = data |> List.map (fun (i, lst) -> i, List.map fst lst) |> List.sort
+
+    let convertation =
+        data |> List.map (fun (i, lst) -> i, List.map snd lst) |> List.sort
+
+    let algorithmLines =
+        algorithm
+        |> List.map (fun (i, lst) -> sprintf "%d %s" i (String.concat " " lst))
+
+    let convertationLines =
+        convertation
+        |> List.map (fun (i, lst) -> sprintf "%d %s" i (String.concat " " lst))
+
+    // Files don't end with a line feed
+    let algDataFile = algorithmLines |> String.concat "\n"
+    let convertationDataFile = convertationLines |> String.concat "\n"
+
 
     let name = DirectoryInfo(dir).Name
     name, algDataFile, convertationDataFile
