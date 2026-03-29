@@ -45,30 +45,8 @@ qtree_mask_f_conditional(r, f) >< (v1, v2) =>
   btree_mask_f_conditional_decons(r, v1) ~ w;
 
 
-qtreemkNode_1(r, nw, ne, sw, se) >< True =>
-  Eraser ~ (ne, sw, se),
-  r ~ nw;
-qtreemkNode_1(r, nw, ne, sw, se) >< False =>
-  r ~ QTreeNode(nw, ne, sw, se);
-
-qtreenodeEquality(r) >< (nw, ne, sw, se) =>
-  ne ~ Dup(ne1, ne2),
-  sw ~ Dup(sw1, sw2),
-
-  (nw, ne1) ~ Eq(nw_x_ne),
-  (ne2, sw1) ~ Eq(ne_x_sw),
-  (sw2, se) ~ Eq(sw_x_se),
-  And3(r) ~ (nw_x_ne, ne_x_sw, sw_x_se);
-
 QTreeMkNode(r) >< (nw, ne, sw, se) =>
-  Dup(nw1, nw2) ~ nw,
-  Dup(ne1, ne2) ~ ne,
-  Dup(sw1, sw2) ~ sw,
-  Dup(se1, se2) ~ se,
-
-  qtreenodeEquality(areEqual) ~ (nw1, ne1, sw1, se1),
-  qtreemkNode_1(r, nw2, ne2, sw2, se2) ~ areEqual;
-
+  EqQTree4(r) ~ (nw, ne, sw, se);
 
 // QTreeMap2 START
 

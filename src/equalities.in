@@ -49,25 +49,25 @@ isDummyBTreeLeaf(r) >< int x => r ~ No(QTreeLeaf(x));
 isDummyBTreeLeaf(r) >< x =>
   r ~ No(x);
 
-isDummyBTreeLeaf(r) >< True => r ~ True;
-isDummyBTreeLeaf(r) >< No(x) => r ~ No(BTreeLeaf(x));
+isDummyBTreeLeaf(r) >< True => r ~ (*R)True;
+isDummyBTreeLeaf(r) >< No(x) => r ~ (*R)No(BTreeLeaf(x));
 
 isDummyBTreeLeaf(r) >< BTreeLeaf(val) =>
   isDummy(w) ~ val,
-  isDummyBTreeLeaf(r) ~ w;
+  (*L)isDummyBTreeLeaf(r) ~ w;
 
 // Returns: True | No(QTree(...))
 isDummyQTreeLeaf(r) >< int x => r ~ No(QTreeLeaf(x));
 isDummyQTreeLeaf(r) >< x =>
   r ~ No(x);
 
-isDummyQTreeLeaf(r) >< True => r ~ True;
+isDummyQTreeLeaf(r) >< True => r ~ (*R)True;
 
 isDummyQTreeLeaf(r) >< No(x) => // From leaf val
-  r ~ No(QTreeLeaf(x));
+  r ~ (*R)No(QTreeLeaf(x));
 isDummyQTreeLeaf(r) >< QTreeLeaf(val) =>
   isDummy(w) ~ val,
-  isDummyQTreeLeaf(r) ~ w;
+  (*L)isDummyQTreeLeaf(r) ~ w;
 
 
 orno_2(r, yval) >< No(xval) =>
@@ -92,6 +92,74 @@ Eq(r) >< (x, y) =>
   eq_1(r, x) ~ y;
 
 
+eqbtree_checkvals(r, xval, yval) >< False =>
+  r ~ BTreeNode(BTreeLeaf(xval), BTreeLeaf(yval));
+
+eqbtree_checkvals(r, xval, yval) >< True =>
+  Eraser ~ yval,
+  r ~ BTreeLeaf(xval);
+
+eqbtree_2(r, yval) >< BTreeLeaf(xval) =>
+  yval ~ Dup(yval1, yval2),
+  xval ~ Dup(xval1, xval2),
+  Eq(areEqual) ~ (xval1, yval1),
+  eqbtree_checkvals(r, xval2, yval2) ~ areEqual;
+
+eqbtree_2(r, yval) >< x =>
+  r ~ BTreeNode(x, BTreeLeaf(yval));
+
+eqbtree_1(r, x) >< BTreeLeaf(yval) =>
+  eqbtree_2(r, yval) ~ x;
+
+eqbtree_1(r, x) >< y =>
+  r ~ BTreeNode(x, y);
+
+// Returns: BTreeLeaf(xval) | BTreeNode(x, y)
+// Literally BTreeMkNode
+EqBTree(r) >< (x, y) =>
+  eqbtree_1(r, x) ~ y;
+
+eqqtree_checkvals(r, t1val, t2val, t3val, t4val) >< False =>
+  r ~ QTreeNode(QTreeLeaf(t1val), QTreeLeaf(t2val), QTreeLeaf(t3val), QTreeLeaf(t4val));
+
+eqqtree_checkvals(r, t1val, t2val, t3val, t4val) >< True =>
+  Eraser ~ (t2val, t3val, t4val),
+  r ~ QTreeLeaf(t1val);
+
+eqqtree_4(r, t1val, t2val, t3val) >< QTreeLeaf(t4val) =>
+  (t1val, t2val, t3val, t4val) ~ Dup((t1val_1, t2val_1, t3val_1, t4val_1), (t1val_2, t2val_t, t3val_t, t4val_2)),
+  (t2val_t, t3val_t) ~ Dup((t2val_2, t3val_2), (t2val_3, t3val_3)),
+  Eq(t1_t2) ~ (t1val_1, t2val_1),
+  Eq(t2_t3) ~ (t2val_2, t3val_1),
+  Eq(t3_t4) ~ (t3val_2, t4val_1),
+  And3(areEqual) ~ (t1_t2, t2_t3, t3_t4),
+  eqqtree_checkvals(r, t1val_2, t2val_3, t3val_3, t4val_2) ~ areEqual;
+
+eqqtree_4(r, t1val, t2val, t3val) >< t4 =>
+  r ~ QTreeNode(QTreeLeaf(t1val), QTreeLeaf(t2val), QTreeLeaf(t3val), t4);
+
+eqqtree_3(r, t1val, t2val, t4) >< QTreeLeaf(t3val) =>
+  eqqtree_4(r, t1val, t2val, t3val) ~ t4;
+
+eqqtree_3(r, t1val, t2val, t4) >< t3 =>
+  r ~ QTreeNode(QTreeLeaf(t1val), QTreeLeaf(t2val), t3, t4);
+
+eqqtree_2(r, t1val, t3, t4) >< QTreeLeaf(t2val) =>
+  eqqtree_3(r, t1val, t2val, t4) ~ t3;
+
+eqqtree_2(r, t1val, t3, t4) >< t2 =>
+  r ~ QTreeNode(QTreeLeaf(t1val), t2, t3, t4);
+
+eqqtree_1(r, t2, t3, t4) >< QTreeLeaf(t1val) =>
+  eqqtree_2(r, t1val, t3, t4) ~ t2;
+
+eqqtree_1(r, t2, t3, t4) >< t1 =>
+  r ~ QTreeNode(t1, t2, t3, t4);
+
+// Returns: QTreeLeaf(t1val) | QTreeNode(t1, t2, t3, t4)
+// Literally QTreeMkNode
+EqQTree4(r) >< (t1, t2, t3, t4) =>
+  eqqtree_1(r, t2, t3, t4) ~ t1;
 
 and_1(r, a) >< False => r ~ False, Eraser ~ a;
 

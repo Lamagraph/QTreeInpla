@@ -6,15 +6,8 @@ use "./src/lists.in";
 
 // BTreeMkNode START
 
-btreemkNode_1(r, lhs, rhs) >< False => r ~ BTreeNode(lhs, rhs);
-btreemkNode_1(r, lhs, rhs) >< True =>
-  rhs ~ Eraser,
-  r ~ lhs;
-
 BTreeMkNode(r) >< (lhs, rhs) =>
-  (lhs, rhs) ~ Dup((lhs1, rhs1), (lhs2, rhs2)),
-  Eq(areEqual) ~ (lhs1, rhs1),
-  btreemkNode_1(r, lhs2, rhs2) ~ areEqual;
+  EqBTree(r) ~ (lhs, rhs);
 
 // BTreeMkNode END
 
