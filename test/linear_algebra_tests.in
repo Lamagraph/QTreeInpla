@@ -32,12 +32,12 @@ op_mul(r) >< (x, y) =>
 MultScalar(r, %op_add, Some(4)) ~ 4;
 r; free r;
 
-QTreeMultiplication(r) ~ (%op_add, %op_mul, 4, QTreeLeaf(UserValue(Some(1))), QTreeLeaf(UserValue(Some(2))));
+QTreeMultiplication(r) ~ (lret, rret, %op_add, %op_mul, 4, QTreeLeaf(UserValue(Some(1))), QTreeLeaf(UserValue(Some(2))));
 
-r; free r;
+r; free lret rret r;
 
-QTreeMultiplication(r) ~ (%op_add, %op_mul, 4, QTreeLeaf(Dummy), QTreeLeaf(UserValue(Some(1))));
-r; free r;
+QTreeMultiplication(r) ~ (lret, rret, %op_add, %op_mul, 4, QTreeLeaf(Dummy), QTreeLeaf(UserValue(Some(1))));
+r; free ifce;
 
 // Expanding mxm
 //
@@ -86,8 +86,8 @@ tree2 ~ QTreeNode(
   QTreeLeaf(UserValue(None))
 );
 
-QTreeMultiplication(r) ~ (%op_add, %op_mul, 4, tree1, tree2);
-r; free r tree1 tree2;
+QTreeMultiplication(r) ~ (lret, rret, %op_add, %op_mul, 4, tree1, tree2);
+r; free ifce;
 
 
 // 1 N N D
@@ -101,8 +101,8 @@ coo2 ~ [ (2, 0, 1), (1, 1, 1), (0, 2, 1) ];
 QTreeFromCoordinateList(tree1) ~ (3, 3, 4, coo1);
 QTreeFromCoordinateList(tree2) ~ (3, 3, 4, coo2);
 
-QTreeMultiplication(r) ~ (%op_add, %op_mul, 4, tree1, tree2);
-r; free coo1 coo2 tree1 tree2 r;
+QTreeMultiplication(r) ~ (lret, rret, %op_add, %op_mul, 4, tree1, tree2);
+r; free lret rret coo1 coo2 tree1 tree2 r;
 
 // vxm tests
 
@@ -128,4 +128,4 @@ qtree ~ QTreeNode(
 btree ~ BTreeLeaf(UserValue(Some(2)));
 
 BTreeQTreeMultiplication(r) ~ (lret, rret, %op_add, %op_mul, 4, btree, qtree);
-r; lret; rret; free qtree btree r;
+r; free qtree btree r;
