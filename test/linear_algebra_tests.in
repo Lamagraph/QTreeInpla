@@ -127,5 +127,5 @@ qtree ~ QTreeNode(
 
 btree ~ BTreeLeaf(UserValue(Some(2)));
 
-BTreeQTreeMultiplication(r) ~ (%op_add, %op_mul, 4, btree, qtree);
-r; free qtree btree r;
+BTreeQTreeMultiplication(r) ~ (lret, rret, %op_add, %op_mul, 4, btree, qtree);
+r; lret; rret; free qtree btree r;

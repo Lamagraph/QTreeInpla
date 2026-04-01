@@ -48,9 +48,9 @@ bfs_option_map_zero(r) >< Some(x) => r ~ Some(0), x ~ Eraser;
 
 bfs_inner_check_nvals(r, graph, level, visited, nlen, ssize, ftree) >< False =>
   frontier ~ SparseVector(nlen, -1, ssize, ftree),
-  vxm(new_frontier) ~ (%bfs_level_op_add, %bfs_level_op_mul, frontier, graph1),
+  vxm(new_frontier) ~ Reuse(frontier_1, graph2, %bfs_level_op_add, %bfs_level_op_mul, frontier, graph),
+  Eraser ~ frontier_1,
   new_frontier ~ Dup(new_frontier1, new_frontier2),
-  graph ~ Dup(graph1, graph2),
   level ~ Dup(level1, level2),
   visited ~ Dup(visited1, visited2),
   SVMask(frontier_masked) ~ (%isNone, new_frontier1, visited1),

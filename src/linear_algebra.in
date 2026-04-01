@@ -146,7 +146,11 @@ QTreeMultiplication(r) >< (op_add, op_mul, size, tree1, tree2) =>
 
 // BTreeQTreeMultiplication (vxm predecessor) BEGIN
 
-BTreeQTreeMultiplicationDeconsQLeaf(r, op_add, op_mul, size, qvval) >< BTreeLeaf(bvval) =>
+BTreeQTreeMultiplicationDeconsQLeaf(r, lret, rret, op_add, op_mul, size, qvval_t) >< BTreeLeaf(bvval_t) =>
+  bvval_t ~ Dup(bvval, bvval_1),
+  qvval_t ~ Dup(qvval, qvval_1),
+  lret ~ BTreeLeaf(bvval_1),
+  rret ~ QTreeLeaf(qvval_1),
   UserValueGetValue(qval) ~ qvval, UserValueGetValue(bval) ~ bvval,
   size ~ Dup(size1, size2),
   MultScalar(rval, op_add, mulval) ~ size1,
@@ -155,26 +159,30 @@ BTreeQTreeMultiplicationDeconsQLeaf(r, op_add, op_mul, size, qvval) >< BTreeLeaf
   BTreeGetNvals(nvals) ~ (size2, rval1),
   r ~ (BTreeLeaf(UserValue(rval2)), nvals);
 
-BTreeQTreeMultiplicationDeconsQLeaf(r, op_add, op_mul, size, qval) >< BTreeNode(lhs, rhs) =>
+BTreeQTreeMultiplicationDeconsQLeaf(r, lret, rret, op_add, op_mul, size, qval) >< BTreeNode(lhs, rhs) =>
   halfSize << Div(size, 2),
   halfSize ~ Dup(halfSize1, halfSize2),
   qval ~ Dup(qval1, qval2),
   op_add ~ Dup(op_add1, op_add2),
   op_mul ~ Dup(op_mul1, op_mul2),
-  BTreeQTreeMultiplicationDeconsQLeaf(rrhsfull, op_add1, op_mul1, halfSize1, qval1) ~ rhs,
-  BTreeQTreeMultiplicationDeconsQLeaf(rlhsfull, op_add2, op_mul2, halfSize2, qval2) ~ lhs,
+  BTreeQTreeMultiplicationDeconsQLeaf(rlhsfull, lhslret, rret, op_add2, op_mul2, halfSize2, qval2) ~ lhs,
+  BTreeQTreeMultiplicationDeconsQLeaf(rrhsfull, rhslret, rhsrret, op_add1, op_mul1, halfSize1, qval1) ~ rhs,
+
+  // Since it gets provided in the first active pair --^
+  Eraser ~ rhsrret,
 
   rrhsfull ~ (rrhs, rhsnvals),
   rlhsfull ~ (rlhs, lhsnvals),
   nvals << Add(lhsnvals, rhsnvals),
 
   BTreeMkNode(rtree) ~ (rlhs, rrhs),
+  BTreeMkNode(lret) ~ (lhslret, rhslret),
   r ~ (rtree, nvals);
 
 
-BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) >< BTreeLeaf(bval) =>
+BTreeQTreeMultiplicationDeconsQNode(r, lret, rret, op_add, op_mul, size, nw, ne, sw, se) >< BTreeLeaf(bval) =>
   bval ~ Dup(bval1, bval2),
-  BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se)
+  BTreeQTreeMultiplicationDeconsQNode(r, lret, rret, op_add, op_mul, size, nw, ne, sw, se)
     ~ BTreeNode(
       BTreeLeaf(bval1),
       BTreeLeaf(bval2)
@@ -192,7 +200,7 @@ vAdd(r) >< (op_add, ssize, lhs_nvals, lhs, rhs) =>
   isDummyBTreeLeaf(rhsIsDummy) ~ (rhs),
   vAddDummyCheck(r, op_add, ssize, lhs_nvals, lhs) ~ rhsIsDummy;
 
-BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) >< BTreeNode(lhs, rhs) =>
+BTreeQTreeMultiplicationDeconsQNode(r, lret, rret, op_add, op_mul, size, nw, ne, sw, se) >< BTreeNode(lhs, rhs) =>
   halfSize << Div(size, 2),
   halfSize ~ Dup(thalfSize1, thalfSize2),
   thalfSize1 ~ Dup4(halfSize1, halfSize2, halfSize3, halfSize4),
@@ -202,13 +210,14 @@ BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) >< 
   top_add2 ~ Dup(op_add5, op_add6),
   op_mul ~ Dup4(op_mul1, op_mul2, op_mul3, op_mul4),
 
-  (lhs, rhs) ~ Dup((lhs1, rhs1), (lhs2, rhs2)),
+  // (lhs, rhs) ~ Dup((lhs1, rhs1), (lhs2, rhs2)),
+  // Clever duplication optimisation
 
   // lhs_x_nw, lhs_x_ne, rhs_x_sw, rhs_x_se
-  BTreeQTreeMultiplication(lhs_x_nwfull) ~ (op_add1, op_mul1, halfSize1, lhs1, nw),
-  BTreeQTreeMultiplication(lhs_x_nefull) ~ (op_add2, op_mul2, halfSize2, lhs2, ne),
-  BTreeQTreeMultiplication(rhs_x_swfull) ~ (op_add3, op_mul3, halfSize3, rhs1, sw),
-  BTreeQTreeMultiplication(rhs_x_sefull) ~ (op_add4, op_mul4, halfSize4, rhs2, se),
+  BTreeQTreeMultiplication(lhs_x_nwfull) ~ (lhs2, nwrret, op_add1, op_mul1, halfSize1, lhs, nw),
+  BTreeQTreeMultiplication(lhs_x_nefull) ~ (lhslret, nerret, op_add2, op_mul2, halfSize2, lhs2, ne),
+  BTreeQTreeMultiplication(rhs_x_swfull) ~ (rhs2, swrret, op_add3, op_mul3, halfSize3, rhs, sw),
+  BTreeQTreeMultiplication(rhs_x_sefull) ~ (rhslret, serret, op_add4, op_mul4, halfSize4, rhs2, se),
 
   lhs_x_nwfull ~ (lhs_x_nw, lhs_x_nw_nvals),
   lhs_x_nefull ~ (lhs_x_ne, lhs_x_ne_nvals),
@@ -224,28 +233,33 @@ BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) >< 
   rrhsfull ~ (rrhs, rrhs_nvals),
   nvals << Add(rlhs_nvals, rrhs_nvals),
 
+  QTreeMkNode(rret) ~ (nwrret, nerret, swrret, serret),
+  BTreeMkNode(lret) ~ (lhslret, rhslret),
+
   BTreeMkNode(rtree) ~ (rlhs, rrhs),
   r ~ (rtree, nvals);
 
 
-BTreeQTreeMultiplicationDecons(r, op_add, op_mul, size, vtree) >< QTreeLeaf(qval) =>
-  BTreeQTreeMultiplicationDeconsQLeaf(r, op_add, op_mul, size, qval) ~ vtree;
+BTreeQTreeMultiplicationDecons(r, lret, rret, op_add, op_mul, size, vtree) >< QTreeLeaf(qval) =>
+  BTreeQTreeMultiplicationDeconsQLeaf(r, lret, rret, op_add, op_mul, size, qval) ~ vtree;
 
-BTreeQTreeMultiplicationDecons(r, op_add, op_mul, size, vtree) >< QTreeNode(nw, ne, sw, se) =>
-  BTreeQTreeMultiplicationDeconsQNode(r, op_add, op_mul, size, nw, ne, sw, se) ~ vtree;
+BTreeQTreeMultiplicationDecons(r, lret, rret, op_add, op_mul, size, vtree) >< QTreeNode(nw, ne, sw, se) =>
+  BTreeQTreeMultiplicationDeconsQNode(r, lret, rret, op_add, op_mul, size, nw, ne, sw, se) ~ vtree;
 
-BTreeQTreeMultiplicationDummyCheck(r, op_add, op_mul, size) >< True =>
+BTreeQTreeMultiplicationDummyCheck(r, lret, rret, op_add, op_mul, size) >< True =>
   r ~ (BTreeLeaf(Dummy), 0),
+  lret ~ BTreeLeaf(Dummy),
+  rret ~ QTreeLeaf(Dummy),
   Eraser ~ (op_add, op_mul, size);
 
-BTreeQTreeMultiplicationDummyCheck(r, op_add, op_mul, size) >< NoNo(vtree, qtree) =>
-  r << BTreeQTreeMultiplicationDecons(op_add, op_mul, size, vtree, qtree);
+BTreeQTreeMultiplicationDummyCheck(r, lret, rret, op_add, op_mul, size) >< NoNo(vtree, qtree) =>
+  BTreeQTreeMultiplicationDecons(r, lret, rret, op_add, op_mul, size, vtree) ~ qtree;
 
-BTreeQTreeMultiplication(r) >< (op_add, op_mul, size, vtree, qtree) =>
+BTreeQTreeMultiplication(r) >< (lret, rret, op_add, op_mul, size, vtree, qtree) =>
   isDummyBTreeLeaf(vtreeIsDummy) ~ vtree,
   isDummyQTreeLeaf(qtreeIsDummy) ~ qtree,
   OrNo(areDummies) ~ (vtreeIsDummy, qtreeIsDummy),
-  BTreeQTreeMultiplicationDummyCheck(r, op_add, op_mul, size) ~ areDummies;
+  BTreeQTreeMultiplicationDummyCheck(r, lret, rret, op_add, op_mul, size) ~ areDummies;
 
 
 // BTreeQTreeMultiplication (vxm predecessor) END
@@ -256,7 +270,11 @@ vxm_cond_1(r, op_add, op_mul, new_len, vssize, qssize, vtree, qtree) >< True =>
   // shrink/expand if needed
   // omitted for now
   Eraser ~ (),
-  BTreeQTreeMultiplication(rtreefull) ~ (op_add, op_mul, qssize, vtree, qtree),
+
+  // Think of how to use these lret, rret for good
+
+  BTreeQTreeMultiplication(rtreefull) ~ (lret, rret, op_add, op_mul, qssize, vtree, qtree),
+  Eraser ~ (lret, rret),
   rtreefull ~ (rtree, nvals),
   r ~ SparseVector(new_len, nvals, vssize, rtree);
 
@@ -279,6 +297,30 @@ vxm(r) >< (op_add, op_mul, vector, matrix) =>
   r << vxm_1(op_add, op_mul, vector, matrix);
 
 // vxm END
+
+// vxm REUSE BEGIN
+
+vxm_r2(r, lret, rret, op_add, op_mul, qnrows, qncols, qssize, qtree) >< SparseVector(vnlen, vnvals, vssize, vtree) =>
+  // Conditions omitted...
+  Eraser ~ (),
+  Dup(qssize_1, qssize_2) ~ qssize,
+  Dup(vnlen_1, vnlen_2) ~ vnlen,
+  Dup(vssize_1, vssize_2) ~ vssize,
+
+  BTreeQTreeMultiplication(rfull) ~ (lrettree, rrettree, op_add, op_mul, qssize_1, vtree, qtree),
+  rfull ~ (rtree, nvals),
+  r ~ SparseVector(vnlen_1, nvals, vssize_1, rtree),
+  lret ~ SparseVector(vnlen_2, vnvals, vssize_2, lrettree),
+  rret ~ SparseMatrix(qnrows, qncols, -1, qssize_2, rrettree);
+
+vxm_r1(r, lret, rret, op_add, op_mul, vector) >< SparseMatrix(nrows, ncols, nvals, ssize, qtree) =>
+  Eraser ~ nvals,
+  vxm_r2(r, lret, rret, op_add, op_mul, nrows, ncols, ssize, qtree) ~ vector;
+
+vxm(r) >< Reuse(lret, rret, op_add, op_mul, vector, matrix) =>
+  r << vxm_r1(lret, rret, op_add, op_mul, vector, matrix);
+
+// vxm REUSE END
 
 // mxm BEGIN
 
