@@ -7,3 +7,5 @@ const LENGTH=5000;
 SMFromCoordinateList(graph) ~ (LENGTH, LENGTH, SSIZE, coo);
 triangle_count(r) ~ (graph);
 // To see the result: r; free r;
+
+exit;

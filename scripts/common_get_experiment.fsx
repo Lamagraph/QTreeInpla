@@ -175,6 +175,8 @@ vcoo ~ [(0, 1)];
 SVFromCoordinateList(startVertices) ~ (LENGTH, SSIZE, vcoo);
 bfs_level(r) ~ (graph, startVertices);
 // To see the result: r; free r;
+
+exit;
 "
         coo
         ssize
@@ -193,6 +195,8 @@ const LENGTH=%d;
 SMFromCoordinateList(graph) ~ (LENGTH, LENGTH, SSIZE, coo);
 triangle_count(r) ~ (graph);
 // To see the result: r; free r;
+
+exit;
 "
         coo
         ssize
@@ -212,6 +216,8 @@ const STARTING_VERTEX=0;
 SMFromCoordinateList(graph) ~ (LENGTH, LENGTH, SSIZE, coo);
 sssp(r) ~ (graph, STARTING_VERTEX);
 // To see the result: r; free r;
+
+exit;
 "
         coo
         ssize

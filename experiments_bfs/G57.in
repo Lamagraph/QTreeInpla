@@ -9,3 +9,5 @@ vcoo ~ [(0, 1)];
 SVFromCoordinateList(startVertices) ~ (LENGTH, SSIZE, vcoo);
 bfs_level(r) ~ (graph, startVertices);
 // To see the result: r; free r;
+
+exit;
