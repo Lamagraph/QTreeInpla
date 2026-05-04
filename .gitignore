@@ -1,1 +1,14 @@
+experiments_bfs/results/
+experiments_bfs/data/
+
+experiments_tc/results/
+experiments_tc/data/
+
+experiments_sssp/results/
+experiments_sssp/data/
+matrices/
+
+
 inpla/
+
+*.mtx
